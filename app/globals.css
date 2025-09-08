@@ -1,26 +1,267 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Updated color tokens to match loyalty program design brief */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #374151;
+  --card: #fefce8;
+  --card-foreground: #374151;
+  --popover: #ffffff;
+  --popover-foreground: #374151;
+  --primary: #d97706;
+  --primary-foreground: #ffffff;
+  --secondary: #f97316;
+  --secondary-foreground: #ffffff;
+  --muted: #fefce8;
+  --muted-foreground: #374151;
+  --accent: #f97316;
+  --accent-foreground: #ffffff;
+  --destructive: #ea580c;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #f9fafb;
+  --ring: #d97706;
+  --chart-1: #d97706;
+  --chart-2: #f97316;
+  --chart-3: #fefce8;
+  --chart-4: #374151;
+  --chart-5: #ea580c;
+  --radius: 0.5rem;
+  --sidebar: #fefce8;
+  --sidebar-foreground: #374151;
+  --sidebar-primary: #d97706;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f97316;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #d97706;
+
+  /* Added admin-specific design tokens */
+  --admin-background: #ffffff;
+  --admin-foreground: #4b5563;
+  --admin-card: #f9fafb;
+  --admin-card-foreground: #4b5563;
+  --admin-primary: #0891b2;
+  --admin-primary-foreground: #ffffff;
+  --admin-secondary: #f59e0b;
+  --admin-secondary-foreground: #ffffff;
+  --admin-muted: #f9fafb;
+  --admin-muted-foreground: #4b5563;
+  --admin-accent: #f59e0b;
+  --admin-accent-foreground: #4b5563;
+  --admin-border: #e5e7eb;
+  --admin-sidebar: #ffffff;
+  --admin-sidebar-foreground: #4b5563;
+  --admin-sidebar-primary: #f9fafb;
+  --admin-sidebar-primary-foreground: #4b5563;
+  --admin-sidebar-accent: #f59e0b;
+  --admin-sidebar-accent-foreground: #ffffff;
+  --admin-sidebar-border: #e5e7eb;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
+  --secondary: #475569;
+  --secondary-foreground: #f1f5f9;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #f97316;
+  --accent-foreground: #ffffff;
+  --destructive: #ea580c;
+  --destructive-foreground: #ffffff;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #f97316;
+  --chart-1: #f97316;
+  --chart-2: #d97706;
+  --chart-3: #475569;
+  --chart-4: #94a3b8;
+  --chart-5: #ea580c;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d97706;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #334155;
+  --sidebar-ring: #f97316;
+
+  /* Added dark mode admin tokens */
+  --admin-background: #0f172a;
+  --admin-foreground: #f1f5f9;
+  --admin-card: #1e293b;
+  --admin-card-foreground: #f1f5f9;
+  --admin-primary: #0891b2;
+  --admin-primary-foreground: #ffffff;
+  --admin-secondary: #f59e0b;
+  --admin-secondary-foreground: #ffffff;
+  --admin-muted: #334155;
+  --admin-muted-foreground: #94a3b8;
+  --admin-accent: #f59e0b;
+  --admin-accent-foreground: #ffffff;
+  --admin-border: #334155;
+  --admin-sidebar: #1e293b;
+  --admin-sidebar-foreground: #f1f5f9;
+  --admin-sidebar-primary: #334155;
+  --admin-sidebar-primary-foreground: #f1f5f9;
+  --admin-sidebar-accent: #f59e0b;
+  --admin-sidebar-accent-foreground: #ffffff;
+  --admin-sidebar-border: #334155;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Added admin color mappings */
+  --color-admin-background: var(--admin-background);
+  --color-admin-foreground: var(--admin-foreground);
+  --color-admin-card: var(--admin-card);
+  --color-admin-card-foreground: var(--admin-card-foreground);
+  --color-admin-primary: var(--admin-primary);
+  --color-admin-primary-foreground: var(--admin-primary-foreground);
+  --color-admin-secondary: var(--admin-secondary);
+  --color-admin-secondary-foreground: var(--admin-secondary-foreground);
+  --color-admin-muted: var(--admin-muted);
+  --color-admin-muted-foreground: var(--admin-muted-foreground);
+  --color-admin-accent: var(--admin-accent);
+  --color-admin-accent-foreground: var(--admin-accent-foreground);
+  --color-admin-border: var(--admin-border);
+  --color-admin-sidebar: var(--admin-sidebar);
+  --color-admin-sidebar-foreground: var(--admin-sidebar-foreground);
+  --color-admin-sidebar-primary: var(--admin-sidebar-primary);
+  --color-admin-sidebar-primary-foreground: var(--admin-sidebar-primary-foreground);
+  --color-admin-sidebar-accent: var(--admin-sidebar-accent);
+  --color-admin-sidebar-accent-foreground: var(--admin-sidebar-accent-foreground);
+  --color-admin-sidebar-border: var(--admin-sidebar-border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Added custom animations for loyalty program */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(217, 119, 6, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(217, 119, 6, 0.8);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confetti-animation {
+  animation: confetti 2s ease-out forwards;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.bounce-in {
+  animation: bounce-in 0.6s ease-out forwards;
+}
+
+/* Added admin-specific utility classes */
+.admin-theme {
+  --background: var(--admin-background);
+  --foreground: var(--admin-foreground);
+  --card: var(--admin-card);
+  --card-foreground: var(--admin-card-foreground);
+  --primary: var(--admin-primary);
+  --primary-foreground: var(--admin-primary-foreground);
+  --secondary: var(--admin-secondary);
+  --secondary-foreground: var(--admin-secondary-foreground);
+  --muted: var(--admin-muted);
+  --muted-foreground: var(--admin-muted-foreground);
+  --accent: var(--admin-accent);
+  --accent-foreground: var(--admin-accent-foreground);
+  --border: var(--admin-border);
+  --sidebar: var(--admin-sidebar);
+  --sidebar-foreground: var(--admin-sidebar-foreground);
+  --sidebar-primary: var(--admin-sidebar-primary);
+  --sidebar-primary-foreground: var(--admin-sidebar-primary-foreground);
+  --sidebar-accent: var(--admin-sidebar-accent);
+  --sidebar-accent-foreground: var(--admin-sidebar-accent-foreground);
+  --sidebar-border: var(--admin-sidebar-border);
 }
