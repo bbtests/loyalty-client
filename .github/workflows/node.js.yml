@@ -1,0 +1,59 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Verify lockfile exists
+        run: ls -la pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: pnpm install 
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type Check
+        run: pnpm run type-check
+
+      - name: Run Unit Tests
+        run: pnpm run test:ci
+
+      # - name: Run E2E Tests
+      #   run: pnpm run test:e2e
+
+      - name: Run Code Quality Checks
+        run: pnpm run lint:fix
+
+      - name: Run Security Audit
+        run: pnpm run audit:check
