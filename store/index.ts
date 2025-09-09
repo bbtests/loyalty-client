@@ -5,6 +5,7 @@ import { badges } from "./badges";
 import { transactions } from "./transactions";
 import { loyaltyPoints } from "./loyalty-points";
 import { cashbackPayments } from "./cashback-payments";
+import { roles } from "./roles";
 
 const autoResetMiddleware =
   (storeAPI: any) => (next: any) => (action: AnyAction) => {
@@ -52,6 +53,7 @@ export const store = configureStore({
     [transactions.reducerPath]: transactions.reducer,
     [loyaltyPoints.reducerPath]: loyaltyPoints.reducer,
     [cashbackPayments.reducerPath]: cashbackPayments.reducer,
+    [roles.reducerPath]: roles.reducer,
   } as any,
   middleware: (getDefaultMiddleware) =>
     (getDefaultMiddleware() as any).concat([
@@ -62,6 +64,7 @@ export const store = configureStore({
       transactions.middleware,
       loyaltyPoints.middleware,
       cashbackPayments.middleware,
+      roles.middleware,
     ]) as any,
 });
 
@@ -72,6 +75,7 @@ export const storeApis = {
   transactions,
   loyaltyPoints,
   cashbackPayments,
+  roles,
 };
 
 export type RootState = ReturnType<typeof store.getState>;

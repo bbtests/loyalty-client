@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useCreateUserMutation } from "@/store/users"
+import { useGetRolesQuery } from "@/store/roles"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Loader2 } from "lucide-react"
 
@@ -33,16 +34,9 @@ interface CreateUserFormData {
   name: string
   email: string
   password: string
-  password_confirmation: string
-  role: string
+  role_id: string
 }
 
-// Mock roles - in a real app, these would come from an API
-const availableRoles = [
-  { id: "1", name: "customer", permissions: [], created_at: new Date().toISOString() },
-  { id: "2", name: "admin", permissions: [], created_at: new Date().toISOString() },
-  { id: "3", name: "super admin", permissions: [], created_at: new Date().toISOString() },
-]
 
 // Validation schema
 const validationSchema = Yup.object({
@@ -52,38 +46,36 @@ const validationSchema = Yup.object({
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
-  role: Yup.string()
-    .required("Role is required"),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters"),
-  password_confirmation: Yup.string()
-    .required("Password confirmation is required")
-    .oneOf([Yup.ref('password')], "Passwords must match"),
+  role_id: Yup.string()
+    .required("Role is required"),
 })
 
 export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalProps) {
   const [createUser, { isLoading }] = useCreateUserMutation()
   const { toast } = useToast()
+  const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery()
+  
+  // Filter out super admin role
+  const availableRoles = (rolesData as any)?.data?.items?.filter((role: any) => role.name !== 'super admin') || []
 
   const initialValues: CreateUserFormData = {
     name: "",
     email: "",
     password: "",
-    password_confirmation: "",
-    role: "",
+    role_id: "",
   }
 
   const onSubmit = async (values: CreateUserFormData, { resetForm }: any) => {
     try {
       // Prepare the user data
-      const selectedRole = availableRoles.find(role => role.id === values.role)
       const userData = {
         name: values.name,
         email: values.email,
         password: values.password,
-        password_confirmation: values.password_confirmation,
-        roles: selectedRole ? [selectedRole] : [], // API expects role objects
+        role_id: values.role_id,
       }
 
       await createUser(userData).unwrap()
@@ -160,19 +152,19 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Field name="role">
+                <Label htmlFor="role_id">Role</Label>
+                <Field name="role_id">
                   {({ field }: any) => (
                     <Select
-                      onValueChange={(value: string) => setFieldValue("role", value)}
+                      onValueChange={(value: string) => setFieldValue("role_id", value)}
                       value={field.value}
-                      disabled={isLoading}
+                      disabled={isLoading || rolesLoading}
                     >
-                      <SelectTrigger className={errors.role && touched.role ? "border-destructive" : ""}>
+                      <SelectTrigger className={errors.role_id && touched.role_id ? "border-destructive" : ""}>
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableRoles.map((role) => (
+                        {availableRoles.map((role: any) => (
                           <SelectItem key={role.id} value={role.id}>
                             {role.name}
                           </SelectItem>
@@ -181,8 +173,9 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                     </Select>
                   )}
                 </Field>
-                <ErrorMessage name="role" component="p" className="text-sm text-destructive" />
+                <ErrorMessage name="role_id" component="p" className="text-sm text-destructive" />
               </div>
+
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -201,22 +194,6 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                 <ErrorMessage name="password" component="p" className="text-sm text-destructive" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password_confirmation">Confirm Password</Label>
-                <Field name="password_confirmation">
-                  {({ field }: any) => (
-                    <Input
-                      {...field}
-                      id="password_confirmation"
-                      type="password"
-                      placeholder="Confirm password"
-                      disabled={isLoading}
-                      className={errors.password_confirmation && touched.password_confirmation ? "border-destructive" : ""}
-                    />
-                  )}
-                </Field>
-                <ErrorMessage name="password_confirmation" component="p" className="text-sm text-destructive" />
-              </div>
 
               <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button

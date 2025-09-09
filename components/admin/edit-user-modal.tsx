@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useUpdateUserMutation } from "@/store/users";
+import { useGetRolesQuery } from "@/store/roles";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Loader2 } from "lucide-react";
 import type { User as UserType } from "@/types/user";
@@ -33,17 +34,10 @@ interface EditUserModalProps {
 interface EditUserFormData {
   name: string
   email: string
-  role: string
   password?: string
-  password_confirmation?: string
+  role_id: string
 }
 
-// Mock roles - in a real app, these would come from an API
-const availableRoles = [
-  { id: "1", name: "customer", permissions: [], created_at: new Date().toISOString() },
-  { id: "2", name: "admin", permissions: [], created_at: new Date().toISOString() },
-  { id: "3", name: "super admin", permissions: [], created_at: new Date().toISOString() },
-]
 
 // Validation schema
 const validationSchema = Yup.object({
@@ -53,40 +47,36 @@ const validationSchema = Yup.object({
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
-  role: Yup.string()
-    .required("Role is required"),
   password: Yup.string()
     .min(8, "Password must be at least 8 characters")
     .nullable(),
-  password_confirmation: Yup.string()
-    .when('password', {
-      is: (password: string) => password && password.length > 0,
-      then: (schema: any) => schema.required("Password confirmation is required").oneOf([Yup.ref('password')], "Passwords must match"),
-      otherwise: (schema: any) => schema.nullable(),
-    }),
+  role_id: Yup.string()
+    .required("Role is required"),
 })
 
 export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModalProps) {
   const [updateUser, { isLoading }] = useUpdateUserMutation()
   const { toast } = useToast()
+  const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery()
+  
+  // Filter out super admin role
+  const availableRoles = (rolesData as any)?.data?.items?.filter((role: any) => role.name !== 'super admin') || []
 
   const getInitialValues = (): EditUserFormData => {
     if (!user) {
       return {
         name: "",
         email: "",
-        role: "",
         password: "",
-        password_confirmation: "",
+        role_id: "",
       }
     }
 
     return {
       name: user.name || "",
       email: user.email || "",
-      role: user.roles?.[0]?.id || "",
       password: "",
-      password_confirmation: "",
+      role_id: user.roles?.[0]?.id || "",
     }
   }
 
@@ -95,17 +85,15 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
 
     try {
       // Prepare the update data
-      const selectedRole = availableRoles.find(role => role.id === values.role)
       const updateData: any = {
         name: values.name,
         email: values.email,
-        roles: selectedRole ? [selectedRole] : [], // API expects role objects
+        role_id: values.role_id,
       }
 
       // Only include password if it's provided
       if (values.password && values.password.length > 0) {
         updateData.password = values.password
-        updateData.password_confirmation = values.password_confirmation
       }
 
       await updateUser({ id: user.id, ...updateData }).unwrap()
@@ -185,19 +173,19 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Field name="role">
+                <Label htmlFor="role_id">Role</Label>
+                <Field name="role_id">
                   {({ field }: any) => (
                     <Select
-                      onValueChange={(value: string) => setFieldValue("role", value)}
+                      onValueChange={(value: string) => setFieldValue("role_id", value)}
                       value={field.value}
-                      disabled={isLoading}
+                      disabled={isLoading || rolesLoading}
                     >
-                      <SelectTrigger className={errors.role && touched.role ? "border-destructive" : ""}>
+                      <SelectTrigger className={errors.role_id && touched.role_id ? "border-destructive" : ""}>
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableRoles.map((role) => (
+                        {availableRoles.map((role: any) => (
                           <SelectItem key={role.id} value={role.id}>
                             {role.name}
                           </SelectItem>
@@ -206,8 +194,9 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
                     </Select>
                   )}
                 </Field>
-                <ErrorMessage name="role" component="p" className="text-sm text-destructive" />
+                <ErrorMessage name="role_id" component="p" className="text-sm text-destructive" />
               </div>
+
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
@@ -232,22 +221,6 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
                 <ErrorMessage name="password" component="p" className="text-sm text-destructive" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password_confirmation">Confirm New Password</Label>
-                <Field name="password_confirmation">
-                  {({ field }: any) => (
-                    <Input
-                      {...field}
-                      id="password_confirmation"
-                      type="password"
-                      placeholder="Confirm new password"
-                      disabled={isLoading}
-                      className={errors.password_confirmation && touched.password_confirmation ? "border-destructive" : ""}
-                    />
-                  )}
-                </Field>
-                <ErrorMessage name="password_confirmation" component="p" className="text-sm text-destructive" />
-              </div>
 
               <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button
