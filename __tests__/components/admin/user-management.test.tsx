@@ -1,6 +1,31 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { UserManagement } from '@/components/admin/user-management'
+
+// Mock DOM methods that Radix UI needs
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  value: jest.fn(),
+  writable: true,
+})
+
+Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+  value: jest.fn(() => ({
+    width: 100,
+    height: 100,
+    top: 0,
+    left: 0,
+    bottom: 100,
+    right: 100,
+  })),
+  writable: true,
+})
+
+// Helper function to wrap user interactions in act()
+const userEvent = async (callback: () => void) => {
+  await act(async () => {
+    callback()
+  })
+}
 
 // Mock the user and role data
 const mockUsers = [
@@ -116,6 +141,13 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 describe('UserManagement Component', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Suppress console warnings during tests
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it('renders user management interface correctly', () => {

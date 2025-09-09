@@ -2,6 +2,31 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { CreateUserModal } from '@/components/admin/create-user-modal'
 
+// Mock DOM methods that Radix UI needs
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  value: jest.fn(),
+  writable: true,
+})
+
+Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+  value: jest.fn(() => ({
+    width: 100,
+    height: 100,
+    top: 0,
+    left: 0,
+    bottom: 100,
+    right: 100,
+  })),
+  writable: true,
+})
+
+// Helper function to wrap user interactions in act()
+const userEvent = async (callback: () => void) => {
+  await act(async () => {
+    callback()
+  })
+}
+
 // Mock RTK Query hooks
 jest.mock('@/store/users', () => ({
   useCreateUserMutation: () => [
@@ -65,6 +90,13 @@ describe('CreateUserModal Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    // Suppress console warnings during tests
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it('renders create user modal correctly when open', () => {
@@ -93,7 +125,7 @@ describe('CreateUserModal Component', () => {
     expectAny(screen.queryByText('Create New User')).not.toBeInTheDocument()
   })
 
-  it('populates role dropdown with available roles (excluding super admin)', () => {
+  it('populates role dropdown with available roles (excluding super admin)', async () => {
     render(
       <TestWrapper>
         <CreateUserModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
@@ -101,14 +133,16 @@ describe('CreateUserModal Component', () => {
     )
 
     const roleCombobox = screen.getByRole('combobox')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(roleCombobox)
     })
 
-    // Use getAllByText to handle multiple elements and check the first one
-    expectAny(screen.getAllByText('admin')[0]).toBeInTheDocument()
-    expectAny(screen.getAllByText('user')[0]).toBeInTheDocument()
-    expectAny(screen.queryByText('super admin')).not.toBeInTheDocument()
+    await waitFor(() => {
+      // Use getAllByText to handle multiple elements and check the first one
+      expectAny(screen.getAllByText('admin')[0]).toBeInTheDocument()
+      expectAny(screen.getAllByText('user')[0]).toBeInTheDocument()
+      expectAny(screen.queryByText('super admin')).not.toBeInTheDocument()
+    })
   })
 
   it('validates required fields', async () => {
@@ -119,7 +153,7 @@ describe('CreateUserModal Component', () => {
     )
 
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -139,26 +173,26 @@ describe('CreateUserModal Component', () => {
     )
 
     const emailInput = screen.getByLabelText('Email')
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(emailInput, { target: { value: 'invalid-email' } })
     })
 
     // Fill other required fields to trigger validation
     const nameInput = screen.getByLabelText('Full Name')
     const passwordInput = screen.getByLabelText('Password')
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(nameInput, { target: { value: 'Test User' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
     })
 
     // Select a role
     const roleCombobox = screen.getByRole('combobox')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(roleCombobox)
     })
 
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -175,12 +209,12 @@ describe('CreateUserModal Component', () => {
     )
 
     const passwordInput = screen.getByLabelText('Password')
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(passwordInput, { target: { value: '123' } })
     })
 
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -197,12 +231,12 @@ describe('CreateUserModal Component', () => {
     )
 
     const nameInput = screen.getByLabelText('Full Name')
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(nameInput, { target: { value: 'A' } })
     })
 
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -223,7 +257,7 @@ describe('CreateUserModal Component', () => {
     const emailInput = screen.getByLabelText('Email')
     const passwordInput = screen.getByLabelText('Password')
 
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(nameInput, { target: { value: 'Test User' } })
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
@@ -231,13 +265,13 @@ describe('CreateUserModal Component', () => {
 
     // Select role - use the combobox selector
     const roleCombobox = screen.getByRole('combobox')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(roleCombobox)
     })
 
     // Submit form
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -246,7 +280,7 @@ describe('CreateUserModal Component', () => {
     expectAny(screen.getByText('Create User')).toBeInTheDocument()
   })
 
-  it('calls onClose when cancel button is clicked', () => {
+  it('calls onClose when cancel button is clicked', async () => {
     render(
       <TestWrapper>
         <CreateUserModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
@@ -254,21 +288,21 @@ describe('CreateUserModal Component', () => {
     )
 
     const cancelButton = screen.getByText('Cancel')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(cancelButton)
     })
 
     expect(mockOnClose).toHaveBeenCalled()
   })
 
-  it('calls onClose when escape key is pressed', () => {
+  it('calls onClose when escape key is pressed', async () => {
     render(
       <TestWrapper>
         <CreateUserModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
       </TestWrapper>
     )
 
-    act(() => {
+    await userEvent(() => {
       fireEvent.keyDown(document, { key: 'Escape' })
     })
 
@@ -293,7 +327,7 @@ describe('CreateUserModal Component', () => {
     const emailInput = screen.getByLabelText('Email')
     const passwordInput = screen.getByLabelText('Password')
 
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(nameInput, { target: { value: 'Test User' } })
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
@@ -301,13 +335,13 @@ describe('CreateUserModal Component', () => {
 
     // Select role - use the combobox selector
     const roleCombobox = screen.getByRole('combobox')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(roleCombobox)
     })
 
     // Submit form
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 
@@ -328,7 +362,7 @@ describe('CreateUserModal Component', () => {
     const emailInput = screen.getByLabelText('Email')
     const passwordInput = screen.getByLabelText('Password')
 
-    act(() => {
+    await userEvent(() => {
       fireEvent.change(nameInput, { target: { value: 'Test User' } })
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
@@ -336,13 +370,13 @@ describe('CreateUserModal Component', () => {
 
     // Select role - use the combobox selector
     const roleCombobox = screen.getByRole('combobox')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(roleCombobox)
     })
 
     // Submit form
     const submitButton = screen.getByText('Create User')
-    act(() => {
+    await userEvent(() => {
       fireEvent.click(submitButton)
     })
 

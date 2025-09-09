@@ -8,7 +8,9 @@ describe('useCashback Hook', () => {
   })
 
   afterEach(() => {
-    jest.runOnlyPendingTimers()
+    act(() => {
+      jest.runOnlyPendingTimers()
+    })
     jest.useRealTimers()
   })
 
@@ -143,15 +145,18 @@ describe('useCashback Hook', () => {
     const { result } = renderHook(() => useCashback())
 
     // Start multiple requests
-    const promises = [
-      result.current.requestCashback(100),
-      result.current.requestCashback(200),
-      result.current.requestCashback(300),
-    ]
+    let promises: Promise<any>[]
+    await act(async () => {
+      promises = [
+        result.current.requestCashback(100),
+        result.current.requestCashback(200),
+        result.current.requestCashback(300),
+      ]
+    })
 
     const results = await act(async () => {
       jest.advanceTimersByTime(1500)
-      return await Promise.all(promises)
+      return await Promise.all(promises!)
     })
 
     // All should have success property

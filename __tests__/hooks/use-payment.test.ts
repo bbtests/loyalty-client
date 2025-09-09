@@ -1,10 +1,38 @@
 import { renderHook, act } from '@testing-library/react'
 import { usePayment } from '@/hooks/use-payment'
 
+// Mock the API client
+jest.mock('@/lib/api-client', () => ({
+  apiClient: {
+    post: jest.fn(),
+  },
+}))
+
+const mockApiClient = require('@/lib/api-client').apiClient
+
 describe('usePayment Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.clearAllTimers()
+    
+    // Mock successful API response by default
+    mockApiClient.post.mockResolvedValue({
+      status: 'success',
+      data: {
+        item: {
+          id: 1,
+          amount: 100,
+          description: 'Test payment',
+          points_earned: 1000,
+          reference: 'pay_1234567890_test',
+          status: 'completed',
+          created_at: '2024-01-01T00:00:00Z',
+          authorization_url: 'https://checkout.paystack.com/test',
+          access_code: 'test_access_code',
+          provider: 'paystack',
+        },
+      },
+    })
   })
 
   afterEach(() => {
@@ -29,24 +57,21 @@ describe('usePayment Hook', () => {
     let paymentResult: any
     await act(async () => {
       const promise = result.current.processPayment(paymentData)
-      jest.advanceTimersByTime(2000)
       paymentResult = await promise
     })
 
-    // Since we can't control Math.random reliably, just check the structure
     expect(paymentResult).toHaveProperty('success')
+    expect(paymentResult.success).toBe(true)
     expect(paymentResult).toHaveProperty('transaction')
-    if (paymentResult.success) {
-      expect(paymentResult.transaction).toMatchObject({
-        amount: 100,
-        description: 'Test payment',
-        points_earned: 1000, // 100 * 10
-        status: 'completed',
-      })
-      expect(paymentResult.transaction.id).toBeDefined()
-      expect(paymentResult.transaction.reference).toMatch(/^pay_\d+$/)
-      expect(paymentResult.transaction.created_at).toBeDefined()
-    }
+    expect(paymentResult.transaction).toMatchObject({
+      amount: 100,
+      description: 'Test payment',
+      points_earned: 1000,
+      status: 'completed',
+    })
+    expect(paymentResult.transaction.id).toBeDefined()
+    expect(paymentResult.transaction.reference).toBe('pay_1234567890_test')
+    expect(paymentResult.transaction.created_at).toBeDefined()
   })
 
   it('calculates points correctly', async () => {
@@ -57,16 +82,33 @@ describe('usePayment Hook', () => {
       description: 'Test payment',
     }
 
+    // Mock API response with calculated points
+    mockApiClient.post.mockResolvedValueOnce({
+      status: 'success',
+      data: {
+        item: {
+          id: 1,
+          amount: 50.5,
+          description: 'Test payment',
+          points_earned: 505, // Math.floor(50.5 * 10)
+          reference: 'pay_1234567890_test',
+          status: 'completed',
+          created_at: '2024-01-01T00:00:00Z',
+          authorization_url: 'https://checkout.paystack.com/test',
+          access_code: 'test_access_code',
+          provider: 'paystack',
+        },
+      },
+    })
+
     let paymentResult: any
     await act(async () => {
       const promise = result.current.processPayment(paymentData)
-      jest.advanceTimersByTime(2000)
       paymentResult = await promise
     })
 
-    if (paymentResult.success) {
-      expect(paymentResult.transaction.points_earned).toBe(505) // Math.floor(50.5 * 10)
-    }
+    expect(paymentResult.success).toBe(true)
+    expect(paymentResult.transaction.points_earned).toBe(505)
   })
 
   it('handles payment processing', async () => {
@@ -80,16 +122,35 @@ describe('usePayment Hook', () => {
     let paymentResult: any
     await act(async () => {
       const promise = result.current.processPayment(paymentData)
-      jest.advanceTimersByTime(2000)
       paymentResult = await promise
     })
 
-    // Check that we get either success or failure
+    // Check that we get success
     expect(paymentResult).toHaveProperty('success')
-    if (!paymentResult.success) {
-      expect(paymentResult).toHaveProperty('error')
-      expect(result.current.error).toBe(paymentResult.error)
+    expect(paymentResult.success).toBe(true)
+  })
+
+  it('handles payment failure', async () => {
+    const { result } = renderHook(() => usePayment())
+
+    // Mock API failure
+    mockApiClient.post.mockRejectedValueOnce(new Error('Payment initialization failed'))
+
+    const paymentData = {
+      amount: 100,
+      description: 'Test payment',
     }
+
+    let paymentResult: any
+    await act(async () => {
+      const promise = result.current.processPayment(paymentData)
+      paymentResult = await promise
+    })
+
+    expect(paymentResult).toHaveProperty('success')
+    expect(paymentResult.success).toBe(false)
+    expect(paymentResult).toHaveProperty('error')
+    expect(paymentResult.error).toBe('Payment initialization failed')
   })
 
   it('sets loading state correctly during payment processing', async () => {
@@ -109,9 +170,8 @@ describe('usePayment Hook', () => {
     // Should be loading immediately
     expect(result.current.loading).toBe(true)
 
-    // Fast-forward timers and wait for completion
+    // Wait for completion
     await act(async () => {
-      jest.advanceTimersByTime(2000)
       await paymentPromise
     })
 
@@ -126,33 +186,43 @@ describe('usePayment Hook', () => {
       description: 'Test payment',
     }
 
-    // Make a payment attempt that will likely fail
+    // Make a payment attempt that will fail
+    mockApiClient.post.mockRejectedValueOnce(new Error('Network error'))
+    
     await act(async () => {
       const promise = result.current.processPayment(paymentData)
-      jest.advanceTimersByTime(2000)
       await promise
     })
 
-    // Check that error is set (if payment failed)
-    const hasError = result.current.error !== ''
+    // Check that error is set
+    expect(result.current.error).toBe('Network error')
 
-    // Make another payment attempt
+    // Make another payment attempt that will succeed
+    mockApiClient.post.mockResolvedValueOnce({
+      status: 'success',
+      data: {
+        item: {
+          id: 1,
+          amount: 100,
+          description: 'Test payment',
+          points_earned: 1000,
+          reference: 'pay_1234567890_test',
+          status: 'completed',
+          created_at: '2024-01-01T00:00:00Z',
+          authorization_url: 'https://checkout.paystack.com/test',
+          access_code: 'test_access_code',
+          provider: 'paystack',
+        },
+      },
+    })
+
     await act(async () => {
       const promise = result.current.processPayment(paymentData)
-      jest.advanceTimersByTime(2000)
       await promise
     })
 
-    // Error should be cleared at the start of new attempt, but may be set again if payment fails
-    // The important thing is that the error clearing mechanism works
-    if (hasError) {
-      // If there was an error before, it should be cleared at the start of the new attempt
-      // (even if it gets set again due to failure)
-      expect(typeof result.current.error).toBe('string')
-    } else {
-      // If there was no error before, there should still be no error
-      expect(result.current.error).toBe('')
-    }
+    // Error should be cleared
+    expect(result.current.error).toBe('')
   })
 
   it('handles different payment amounts', async () => {
@@ -171,16 +241,33 @@ describe('usePayment Hook', () => {
         description: 'Test payment',
       }
 
+      // Mock API response for each test case
+      mockApiClient.post.mockResolvedValueOnce({
+        status: 'success',
+        data: {
+          item: {
+            id: 1,
+            amount: testCase.amount,
+            description: 'Test payment',
+            points_earned: testCase.expectedPoints,
+            reference: 'pay_1234567890_test',
+            status: 'completed',
+            created_at: '2024-01-01T00:00:00Z',
+            authorization_url: 'https://checkout.paystack.com/test',
+            access_code: 'test_access_code',
+            provider: 'paystack',
+          },
+        },
+      })
+
       let paymentResult: any
       await act(async () => {
         const promise = result.current.processPayment(paymentData)
-        jest.advanceTimersByTime(2000)
         paymentResult = await promise
       })
 
-      if (paymentResult.success) {
-        expect(paymentResult.transaction.points_earned).toBe(testCase.expectedPoints)
-      }
+      expect(paymentResult.success).toBe(true)
+      expect(paymentResult.transaction.points_earned).toBe(testCase.expectedPoints)
     }
   })
 
@@ -194,22 +281,39 @@ describe('usePayment Hook', () => {
 
     const results = []
     for (let i = 0; i < 3; i++) {
+      // Mock API response with unique ID for each call
+      mockApiClient.post.mockResolvedValueOnce({
+        status: 'success',
+        data: {
+          item: {
+            id: i + 1, // Unique ID
+            amount: 100,
+            description: 'Test payment',
+            points_earned: 1000,
+            reference: `pay_1234567890_test_${i}`,
+            status: 'completed',
+            created_at: '2024-01-01T00:00:00Z',
+            authorization_url: 'https://checkout.paystack.com/test',
+            access_code: 'test_access_code',
+            provider: 'paystack',
+          },
+        },
+      })
+
       let paymentResult: any
       await act(async () => {
         const promise = result.current.processPayment(paymentData)
-        jest.advanceTimersByTime(2000)
         paymentResult = await promise
       })
+      
       if (paymentResult.success) {
         results.push(paymentResult.transaction.id)
       }
     }
 
-    // If we have successful payments, IDs should be unique
-    if (results.length > 1) {
-      const uniqueIds = new Set(results)
-      expect(uniqueIds.size).toBe(results.length)
-    }
+    // IDs should be unique
+    const uniqueIds = new Set(results)
+    expect(uniqueIds.size).toBe(results.length)
   })
 
   it('generates unique reference numbers', async () => {
@@ -222,21 +326,38 @@ describe('usePayment Hook', () => {
 
     const results = []
     for (let i = 0; i < 3; i++) {
+      // Mock API response with unique reference for each call
+      mockApiClient.post.mockResolvedValueOnce({
+        status: 'success',
+        data: {
+          item: {
+            id: i + 1,
+            amount: 100,
+            description: 'Test payment',
+            points_earned: 1000,
+            reference: `pay_1234567890_test_${i}`, // Unique reference
+            status: 'completed',
+            created_at: '2024-01-01T00:00:00Z',
+            authorization_url: 'https://checkout.paystack.com/test',
+            access_code: 'test_access_code',
+            provider: 'paystack',
+          },
+        },
+      })
+
       let paymentResult: any
       await act(async () => {
         const promise = result.current.processPayment(paymentData)
-        jest.advanceTimersByTime(2000)
         paymentResult = await promise
       })
+      
       if (paymentResult.success) {
         results.push(paymentResult.transaction.reference)
       }
     }
 
-    // If we have successful payments, references should be unique
-    if (results.length > 1) {
-      const uniqueRefs = new Set(results)
-      expect(uniqueRefs.size).toBe(results.length)
-    }
+    // References should be unique
+    const uniqueRefs = new Set(results)
+    expect(uniqueRefs.size).toBe(results.length)
   })
 })

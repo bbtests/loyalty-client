@@ -67,7 +67,7 @@ describe('Login Component', () => {
 
     render(<Login />)
 
-    expectAny(mockPush).toHaveBeenCalledWith('/admin')
+    expectAny(mockPush).toHaveBeenCalledWith('/dashboard/admin')
   })
 
   it('redirects to home page when user has no admin role', () => {
@@ -85,7 +85,7 @@ describe('Login Component', () => {
 
     render(<Login />)
 
-    expectAny(mockPush).toHaveBeenCalledWith('/')
+    expectAny(mockPush).toHaveBeenCalledWith('/dashboard')
   })
 
   it('redirects to admin page when user has super admin role', () => {
@@ -103,7 +103,7 @@ describe('Login Component', () => {
 
     render(<Login />)
 
-    expectAny(mockPush).toHaveBeenCalledWith('/admin')
+    expectAny(mockPush).toHaveBeenCalledWith('/dashboard/admin')
   })
 
   it('handles form submission with valid credentials', async () => {

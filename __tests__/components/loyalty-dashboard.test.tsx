@@ -1,14 +1,58 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { LoyaltyDashboard } from '@/components/loyalty-dashboard'
 import { useLoyaltyData } from '@/hooks/use-loyalty-data'
 
 // Type assertion helper for testing library matchers
 const expectAny = expect as any
 
+// Mock DOM methods for Radix UI components
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  value: jest.fn(),
+  writable: true,
+})
+
+Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+  value: jest.fn(() => ({
+    width: 120,
+    height: 120,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+  })),
+  writable: true,
+})
+
+// Helper function to wrap fireEvent calls in act
+const userEvent = async (callback: () => void) => {
+  await act(async () => {
+    callback()
+  })
+}
+
+// Mock NextAuth
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(),
+  signOut: jest.fn(),
+}))
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  })),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(),
+  })),
+}))
+
 // Mock the hook
 jest.mock('@/hooks/use-loyalty-data')
 
 const mockUseLoyaltyData = useLoyaltyData as jest.MockedFunction<typeof useLoyaltyData>
+const mockUseSession = require('next-auth/react').useSession as jest.MockedFunction<any>
+const mockUseSearchParams = require('next/navigation').useSearchParams as jest.MockedFunction<any>
 
 const mockLoyaltyData = {
   user_id: 1,
@@ -62,6 +106,31 @@ const mockLoyaltyData = {
 describe('LoyaltyDashboard Component', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    
+    // Suppress console warnings and errors
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    
+    // Mock authenticated session by default
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          email: 'test@example.com',
+          name: 'Test User',
+        },
+      },
+      status: 'authenticated',
+    })
+    
+    // Mock search params
+    mockUseSearchParams.mockReturnValue({
+      get: jest.fn().mockReturnValue(null),
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it('renders loading state correctly', () => {
@@ -176,7 +245,7 @@ describe('LoyaltyDashboard Component', () => {
     expectAny(screen.getByText('Loyal Customer')).toBeInTheDocument()
   })
 
-  it('handles simulate achievement button click', () => {
+  it('handles simulate achievement button click', async () => {
     const mockSimulateAchievement = jest.fn()
     mockUseLoyaltyData.mockReturnValue({
       loyaltyData: mockLoyaltyData,
@@ -187,7 +256,7 @@ describe('LoyaltyDashboard Component', () => {
     render(<LoyaltyDashboard />)
 
     const simulateButton = screen.getByText('Simulate Achievement')
-    fireEvent.click(simulateButton)
+    await userEvent(() => fireEvent.click(simulateButton))
 
     expectAny(mockSimulateAchievement).toHaveBeenCalled()
   })
@@ -203,7 +272,7 @@ describe('LoyaltyDashboard Component', () => {
     render(<LoyaltyDashboard />)
 
     const simulateButton = screen.getByText('Simulate Achievement')
-    fireEvent.click(simulateButton)
+    await userEvent(() => fireEvent.click(simulateButton))
 
     await waitFor(() => {
       expectAny(screen.getByText('Big Spender')).toBeInTheDocument()
@@ -211,7 +280,7 @@ describe('LoyaltyDashboard Component', () => {
     })
   })
 
-  it('handles payment modal opening', () => {
+  it('handles payment modal opening', async () => {
     mockUseLoyaltyData.mockReturnValue({
       loyaltyData: mockLoyaltyData,
       loading: false,
@@ -221,13 +290,13 @@ describe('LoyaltyDashboard Component', () => {
     render(<LoyaltyDashboard />)
 
     const makePurchaseButton = screen.getByText('Make Purchase')
-    fireEvent.click(makePurchaseButton)
+    await userEvent(() => fireEvent.click(makePurchaseButton))
 
     // Payment modal should be rendered (we can't easily test the modal content without more complex setup)
     expectAny(makePurchaseButton).toBeInTheDocument()
   })
 
-  it('handles tab switching', () => {
+  it('handles tab switching', async () => {
     mockUseLoyaltyData.mockReturnValue({
       loyaltyData: mockLoyaltyData,
       loading: false,
@@ -237,7 +306,7 @@ describe('LoyaltyDashboard Component', () => {
     render(<LoyaltyDashboard />)
 
     const achievementsTab = screen.getByText('Achievements')
-    fireEvent.click(achievementsTab)
+    await userEvent(() => fireEvent.click(achievementsTab))
 
     // The tab should be active (this would require more complex testing to verify the actual content)
     expectAny(achievementsTab).toBeInTheDocument()
@@ -289,5 +358,25 @@ describe('LoyaltyDashboard Component', () => {
 
     expectAny(screen.getByText('No Badge')).toBeInTheDocument()
     expectAny(screen.getByText('Tier 0')).toBeInTheDocument()
+  })
+
+  it('renders unauthenticated state correctly', () => {
+    // Mock unauthenticated session
+    mockUseSession.mockReturnValue({
+      data: null,
+      status: 'unauthenticated',
+    })
+
+    mockUseLoyaltyData.mockReturnValue({
+      loyaltyData: null,
+      loading: false,
+      simulateAchievement: jest.fn(),
+    })
+
+    render(<LoyaltyDashboard />)
+
+    expectAny(screen.getByText('Loyalty Dashboard')).toBeInTheDocument()
+    expectAny(screen.getByText('Please log in to access payment features and track your loyalty points.')).toBeInTheDocument()
+    expectAny(screen.getByText('Login')).toBeInTheDocument()
   })
 })
