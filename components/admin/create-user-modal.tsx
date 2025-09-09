@@ -7,6 +7,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -109,6 +110,9 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             <Plus className="w-5 h-5" />
             Create New User
           </DialogTitle>
+          <DialogDescription>
+            Add a new user to the system with role assignments.
+          </DialogDescription>
         </DialogHeader>
 
         <Formik

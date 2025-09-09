@@ -1,16 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 
 export function useCashback() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   const requestCashback = async (amount: number) => {
     setLoading(true)
     setError("")
     setSuccess(false)
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
 
     try {
       // Simulate API call
@@ -26,7 +42,7 @@ export function useCashback() {
       setSuccess(true)
 
       // Reset success after 5 seconds
-      setTimeout(() => setSuccess(false), 5000)
+      timeoutRef.current = setTimeout(() => setSuccess(false), 5000)
 
       return {
         success: true,
@@ -37,7 +53,7 @@ export function useCashback() {
       setError(errorMessage)
 
       // Reset error after 5 seconds
-      setTimeout(() => setError(""), 5000)
+      timeoutRef.current = setTimeout(() => setError(""), 5000)
 
       return {
         success: false,

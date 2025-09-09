@@ -3,12 +3,13 @@ import { useCashback } from '@/hooks/use-cashback'
 
 describe('useCashback Hook', () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     jest.clearAllMocks()
-    jest.clearAllTimers()
   })
 
   afterEach(() => {
     jest.runOnlyPendingTimers()
+    jest.useRealTimers()
   })
 
   it('initializes with correct default state', () => {
@@ -94,7 +95,7 @@ describe('useCashback Hook', () => {
 
     if (result.current.success) {
       // Fast-forward 5 seconds
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(5000)
       })
 
@@ -113,7 +114,7 @@ describe('useCashback Hook', () => {
 
     if (result.current.error) {
       // Fast-forward 5 seconds
-      act(() => {
+      await act(async () => {
         jest.advanceTimersByTime(5000)
       })
 

@@ -26,7 +26,7 @@ describe('useLoyaltyData Hook', () => {
     const { result } = renderHook(() => useLoyaltyData())
 
     // Fast-forward time to trigger the timeout
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -48,7 +48,7 @@ describe('useLoyaltyData Hook', () => {
   it('has correct initial points data', async () => {
     const { result } = renderHook(() => useLoyaltyData())
 
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -65,7 +65,7 @@ describe('useLoyaltyData Hook', () => {
   it('has correct achievements data', async () => {
     const { result } = renderHook(() => useLoyaltyData())
 
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -86,7 +86,7 @@ describe('useLoyaltyData Hook', () => {
   it('has correct badges data', async () => {
     const { result } = renderHook(() => useLoyaltyData())
 
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -108,7 +108,7 @@ describe('useLoyaltyData Hook', () => {
   it('has correct current badge data', async () => {
     const { result } = renderHook(() => useLoyaltyData())
 
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -129,7 +129,7 @@ describe('useLoyaltyData Hook', () => {
     const { result } = renderHook(() => useLoyaltyData())
 
     // Wait for initial data to load
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -153,7 +153,7 @@ describe('useLoyaltyData Hook', () => {
     const { result } = renderHook(() => useLoyaltyData())
 
     // Wait for initial data to load
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 
@@ -192,14 +192,14 @@ describe('useLoyaltyData Hook', () => {
     clearTimeoutSpy.mockRestore()
   })
 
-  it('does not load data multiple times on re-renders', () => {
+  it('does not load data multiple times on re-renders', async () => {
     const { rerender, result } = renderHook(() => useLoyaltyData())
 
     // Re-render the hook
     rerender()
 
     // Advance timers
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(1000)
     })
 

@@ -39,6 +39,7 @@ describe('Redux Store', () => {
     expect(storeApis).toHaveProperty('transactions')
     expect(storeApis).toHaveProperty('loyaltyPoints')
     expect(storeApis).toHaveProperty('cashbackPayments')
+    expect(storeApis).toHaveProperty('roles')
   })
 
   it('has correct reducer paths', () => {
@@ -70,6 +71,7 @@ describe('Store Configuration', () => {
     expect(state).toHaveProperty('transactionsApi')
     expect(state).toHaveProperty('loyaltyPointsApi')
     expect(state).toHaveProperty('cashbackPaymentsApi')
+    expect(state).toHaveProperty('rolesApi')
   })
 
   it('has correct middleware configuration', () => {

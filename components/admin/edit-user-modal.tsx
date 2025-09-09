@@ -6,6 +6,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -129,6 +130,9 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
             <Edit className="w-5 h-5" />
             Edit User
           </DialogTitle>
+          <DialogDescription>
+            Update user information and role assignments.
+          </DialogDescription>
         </DialogHeader>
 
         <Formik

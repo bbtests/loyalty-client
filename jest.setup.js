@@ -124,3 +124,15 @@ const sessionStorageMock = {
   clear: jest.fn(),
 }
 global.sessionStorage = sessionStorageMock
+
+// Mock React Redux Provider
+jest.mock('react-redux', () => ({
+  Provider: ({ children }) => children,
+  useDispatch: jest.fn(() => jest.fn()),
+  useSelector: jest.fn((selector) => selector({})),
+  useStore: jest.fn(() => ({
+    getState: jest.fn(() => ({})),
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+  })),
+}))

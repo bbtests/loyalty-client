@@ -7,7 +7,7 @@ import { loyaltyPoints } from "./loyalty-points";
 import { cashbackPayments } from "./cashback-payments";
 import { roles } from "./roles";
 
-const autoResetMiddleware =
+export const createAutoResetMiddleware = (storeApis: any) =>
   (storeAPI: any) => (next: any) => (action: AnyAction) => {
     // Check for fulfilled mutation actions
     if (action.type && action.type.endsWith("/fulfilled")) {
@@ -30,7 +30,7 @@ const autoResetMiddleware =
             // Find the matching API and reset its state
             const apiEntry = Object.values(storeApis).find(
               (api: any) => api.reducerPath === reducerPath,
-            );
+            ) as any;
 
             if (apiEntry && apiEntry.util?.resetApiState) {
               setTimeout(() => {
@@ -45,6 +45,16 @@ const autoResetMiddleware =
     return next(action);
   };
 
+export const storeApis = {
+  users,
+  achievements,
+  badges,
+  transactions,
+  loyaltyPoints,
+  cashbackPayments,
+  roles,
+};
+
 export const store = configureStore({
   reducer: {
     [users.reducerPath]: users.reducer,
@@ -57,7 +67,7 @@ export const store = configureStore({
   } as any,
   middleware: (getDefaultMiddleware) =>
     (getDefaultMiddleware() as any).concat([
-      autoResetMiddleware,
+      createAutoResetMiddleware(storeApis),
       users.middleware,
       achievements.middleware,
       badges.middleware,
@@ -67,16 +77,6 @@ export const store = configureStore({
       roles.middleware,
     ]) as any,
 });
-
-export const storeApis = {
-  users,
-  achievements,
-  badges,
-  transactions,
-  loyaltyPoints,
-  cashbackPayments,
-  roles,
-};
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

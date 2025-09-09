@@ -5,6 +5,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,12 +23,18 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0"
+        onPointerDownOutside={onClose}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <User className="w-5 h-5" />
             User Details
           </DialogTitle>
+          <DialogDescription>
+            View detailed information about this user account.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -58,7 +65,7 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    Member Since
+                    Created
                   </div>
                   <p className="font-medium">
                     {new Date(user.created_at).toLocaleDateString()}
@@ -67,7 +74,7 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    Last Updated
+                    Updated
                   </div>
                   <p className="font-medium">
                     {new Date(user.updated_at).toLocaleDateString()}
@@ -81,11 +88,15 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
                   Roles
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {user.roles?.map((role) => (
-                    <Badge key={role.id} variant="outline" className="border-border">
-                      {role.name}
-                    </Badge>
-                  )) || <span className="text-muted-foreground">No roles assigned</span>}
+                  {user.roles && user.roles.length > 0 ? (
+                    user.roles.map((role) => (
+                      <Badge key={role.id} variant="outline" className="border-border">
+                        {role.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground">No roles assigned</span>
+                  )}
                 </div>
               </div>
 
@@ -104,49 +115,47 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
           </Card>
 
           {/* Loyalty Points */}
-          {user.loyalty_points && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Star className="w-5 h-5" />
-                  Loyalty Points
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
-                    <p className="text-xl sm:text-2xl font-bold text-primary">
-                      {user.loyalty_points.points?.toLocaleString() || '0'}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Available Points</p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
-                    <p className="text-xl sm:text-2xl font-bold text-green-600">
-                      {user.loyalty_points.total_earned?.toLocaleString() || '0'}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Total Earned</p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
-                    <p className="text-xl sm:text-2xl font-bold text-orange-600">
-                      {user.loyalty_points.total_redeemed?.toLocaleString() || '0'}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Total Redeemed</p>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                Loyalty Points
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-primary">
+                    {user.loyalty_points?.points?.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Available Points</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">
+                    {user.loyalty_points?.total_earned?.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Earned</p>
+                </div>
+                <div className="text-center p-3 sm:p-4 bg-muted/50 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">
+                    {user.loyalty_points?.total_redeemed?.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Redeemed</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Achievements */}
-          {user.achievements && user.achievements.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  Achievements ({user.achievements.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Achievements {user.achievements && user.achievements.length > 0 && `(${user.achievements.length})`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user.achievements && user.achievements.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {user.achievements.map((achievement) => (
                     <div key={achievement.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
@@ -165,20 +174,22 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No achievements yet</p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Badges */}
-          {user.badges && user.badges.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  Badges ({user.badges.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Badges {user.badges && user.badges.length > 0 && `(${user.badges.length})`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user.badges && user.badges.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {user.badges.map((badge) => (
                     <div key={badge.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
@@ -202,9 +213,11 @@ export function ViewUserModal({ user, isOpen, onClose }: ViewUserModalProps) {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No badges earned yet</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
