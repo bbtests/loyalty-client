@@ -16,6 +16,7 @@ services:
             - ".:/app"
             - ./startup.sh:/usr/local/bin/startup.sh:ro
             - "/app/node_modules"
+            - "/app/.next"
         networks:
             - sail
 
