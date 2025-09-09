@@ -55,16 +55,16 @@ export function AdminDashboard() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div>
-              <h1 className="text-2xl font-bold text-card-foreground">Loyalty Program Admin</h1>
-              <p className="text-muted-foreground">Manage customers and program performance</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Loyalty Program Admin</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Manage customers and program performance</p>
             </div>
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="border-border text-card-foreground hover:bg-muted bg-transparent"
+              className="border-border text-card-foreground hover:bg-muted bg-transparent w-full sm:w-auto"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
@@ -74,24 +74,24 @@ export function AdminDashboard() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-card border-border">
-            <TabsTrigger value="overview" className="flex items-center gap-2 text-card-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-card border-border h-auto">
+            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-card-foreground py-2 sm:py-1">
               <BarChart3 className="w-4 h-4" />
-              Overview
+              <span className="text-xs sm:text-sm">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2 text-card-foreground">
+            <TabsTrigger value="users" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-card-foreground py-2 sm:py-1">
               <Users className="w-4 h-4" />
-              Users
+              <span className="text-xs sm:text-sm">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2 text-card-foreground">
+            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-card-foreground py-2 sm:py-1">
               <BarChart3 className="w-4 h-4" />
-              Analytics
+              <span className="text-xs sm:text-sm">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 text-card-foreground">
+            <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-card-foreground py-2 sm:py-1">
               <Settings className="w-4 h-4" />
-              Settings
+              <span className="text-xs sm:text-sm">Settings</span>
             </TabsTrigger>
           </TabsList>
 

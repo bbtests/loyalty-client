@@ -53,22 +53,22 @@ export function LoyaltyDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <h1 className="text-4xl font-bold text-foreground">Loyalty Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Track your rewards and achievements</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Loyalty Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Track your rewards and achievements</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             onClick={() => setShowPaymentModal(true)}
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Make Purchase
           </Button>
-          <Button onClick={handleSimulateAchievement} className="bg-primary hover:bg-primary/90">
+          <Button onClick={handleSimulateAchievement} className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
             <Zap className="w-4 h-4 mr-2" />
             Simulate Achievement
           </Button>
@@ -79,64 +79,64 @@ export function LoyaltyDashboard() {
       <PointsOverview loyaltyData={loyaltyData} />
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-card">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 bg-card h-auto">
+          <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <TrendingUp className="w-4 h-4" />
-            Overview
+            <span className="text-xs sm:text-sm">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="achievements" className="flex items-center gap-2">
+          <TabsTrigger value="achievements" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <Trophy className="w-4 h-4" />
-            Achievements
+            <span className="text-xs sm:text-sm">Achievements</span>
           </TabsTrigger>
-          <TabsTrigger value="badges" className="flex items-center gap-2">
+          <TabsTrigger value="badges" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <Award className="w-4 h-4" />
-            Badges
+            <span className="text-xs sm:text-sm">Badges</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
+          <TabsTrigger value="history" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <Target className="w-4 h-4" />
-            History
+            <span className="text-xs sm:text-sm">History</span>
           </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
+          <TabsTrigger value="payments" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <CreditCard className="w-4 h-4" />
-            Payments
+            <span className="text-xs sm:text-sm">Payments</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Quick Stats */}
             <Card className="bg-card border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-card-foreground">Total Achievements</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-card-foreground">Total Achievements</CardTitle>
                 <Trophy className="h-4 w-4 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-card-foreground">{loyaltyData?.achievements?.length || 0}</div>
+                <div className="text-xl sm:text-2xl font-bold text-card-foreground">{loyaltyData?.achievements?.length || 0}</div>
                 <p className="text-xs text-muted-foreground">+2 this month</p>
               </CardContent>
             </Card>
 
             <Card className="bg-card border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-card-foreground">Current Badge</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-card-foreground">Current Badge</CardTitle>
                 <Crown className="h-4 w-4 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-card-foreground">
+                <div className="text-xl sm:text-2xl font-bold text-card-foreground">
                   {loyaltyData?.current_badge?.name || "No Badge"}
                 </div>
                 <p className="text-xs text-muted-foreground">Tier {loyaltyData?.current_badge?.tier || 0}</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border">
+            <Card className="bg-card border-border sm:col-span-2 lg:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-card-foreground">Points Redeemed</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-card-foreground">Points Redeemed</CardTitle>
                 <Gift className="h-4 w-4 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-card-foreground">
+                <div className="text-xl sm:text-2xl font-bold text-card-foreground">
                   {loyaltyData?.points?.total_redeemed?.toLocaleString() || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">Lifetime redemptions</p>
@@ -147,20 +147,20 @@ export function LoyaltyDashboard() {
           {/* Recent Achievements Preview */}
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Recent Achievements</CardTitle>
+              <CardTitle className="text-sm sm:text-base text-card-foreground">Recent Achievements</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {loyaltyData?.achievements?.slice(0, 4).map((achievement: any) => (
                   <div
                     key={achievement.id}
                     className="flex items-center space-x-3 p-3 rounded-lg bg-background border border-border"
                   >
                     <div className="flex-shrink-0">
-                      <Trophy className="h-8 w-8 text-accent" />
+                      <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{achievement.name}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground truncate">{achievement.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(achievement.unlocked_at).toLocaleDateString()}
                       </p>
@@ -184,8 +184,8 @@ export function LoyaltyDashboard() {
           <TransactionHistory />
         </TabsContent>
 
-        <TabsContent value="payments" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="payments" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
               <PaymentHistory />
             </div>
