@@ -4,37 +4,51 @@ import { NextResponse } from "next/server"
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
-    const isAdminRoute = req.nextUrl.pathname.startsWith("/admin")
+    const pathname = req.nextUrl.pathname
     
-    // If accessing admin routes, check if user has admin role
-    if (isAdminRoute) {
+    // Check if accessing dashboard routes
+    const isDashboardRoute = pathname.startsWith("/dashboard")
+    const isAdminRoute = pathname.startsWith("/dashboard/admin")
+    
+    // If accessing dashboard routes, require authentication
+    if (isDashboardRoute) {
       if (!token) {
         return NextResponse.redirect(new URL("/auth/login", req.url))
       }
       
-      // Check if user has admin role
-      const user = token.user as any
-      const hasAdminRole = user?.roles?.some((role: any) => 
-        role.name === "super admin" || role.name === "admin"
-      )
-      
-      if (!hasAdminRole) {
-        return NextResponse.redirect(new URL("/", req.url))
+      // If accessing admin dashboard, check admin role
+      if (isAdminRoute) {
+        const user = token.user as any
+        const hasAdminRole = user?.roles?.some((role: any) => 
+          role.name === "super admin" || role.name === "admin"
+        )
+        
+        if (!hasAdminRole) {
+          return NextResponse.redirect(new URL("/dashboard", req.url))
+        }
       }
     }
+    
     
     return NextResponse.next()
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
+        const pathname = req.nextUrl.pathname
+        
         // Allow access to auth login page without authentication
-        if (req.nextUrl.pathname === "/auth/login") {
+        if (pathname === "/auth/login") {
           return true
         }
         
-        // For other admin routes, require authentication
-        if (req.nextUrl.pathname.startsWith("/admin")) {
+        // Allow access to home page without authentication
+        if (pathname === "/") {
+          return true
+        }
+        
+        // For dashboard routes, require authentication
+        if (pathname.startsWith("/dashboard")) {
           return !!token
         }
         
@@ -45,5 +59,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/admin/:path*", "/auth/:path*"]
+  matcher: ["/dashboard/:path*", "/auth/:path*"]
 }

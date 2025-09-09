@@ -1,10 +1,24 @@
 "use client"
 
 import { useState } from "react"
+import { apiClient } from "@/lib/api-client"
 
 interface PaymentData {
   amount: number
   description: string
+}
+
+interface PaymentTransaction {
+  id: number
+  amount: number
+  description: string
+  points_earned?: number
+  reference: string
+  status: string
+  created_at: string
+  authorization_url: string
+  access_code: string
+  provider: string
 }
 
 export function usePayment() {
@@ -16,29 +30,32 @@ export function usePayment() {
     setError("")
 
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Mock payment success (90% success rate)
-      const success = Math.random() > 0.1
-
-      if (!success) {
-        throw new Error("Payment failed. Please try again.")
-      }
-
-      const transaction = {
-        id: Date.now(),
+      // Call the actual payment API
+      const response = await apiClient.post<{ item: PaymentTransaction }>("/payments/initialize", {
         amount: paymentData.amount,
         description: paymentData.description,
-        points_earned: Math.floor(paymentData.amount * 10),
-        reference: `pay_${Date.now()}`,
-        status: "completed",
-        created_at: new Date().toISOString(),
-      }
+      })
 
-      return {
-        success: true,
-        transaction,
+      if (response.status === "success") {
+        // Redirect to payment URL
+        window.location.href = response.data.item.authorization_url
+
+        const transaction = {
+          id: response.data.item.id,
+          amount: response.data.item.amount,
+          description: response.data.item.description,
+          points_earned: response.data.item.points_earned || Math.floor(paymentData.amount * 10),
+          reference: response.data.item.reference,
+          status: response.data.item.status,
+          created_at: response.data.item.created_at,
+        }
+
+        return {
+          success: true,
+          transaction,
+        }
+      } else {
+        throw new Error(response.message || "Payment initialization failed")
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Payment processing failed"

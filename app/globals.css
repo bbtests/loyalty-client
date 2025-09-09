@@ -189,6 +189,9 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  a, button {
+    @apply cursor-pointer;
+  }
 }
 
 /* Added custom animations for loyalty program */

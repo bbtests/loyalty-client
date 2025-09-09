@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Users, BarChart3, Settings, LogOut } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { AdminOverview } from "@/components/admin/admin-overview"
 import { UserManagement } from "@/components/admin/user-management"
 import { AdminAnalytics } from "@/components/admin/admin-analytics"
@@ -30,7 +31,7 @@ export function AdminDashboard() {
     )
     
     if (!hasAdminRole) {
-      router.push("/")
+      router.push("/dashboard")
       return
     }
   }, [session, status, router])
@@ -57,14 +58,17 @@ export function AdminDashboard() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Loyalty Program Admin</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">Manage customers and program performance</p>
+            <div className="flex items-center space-x-4">
+              <Logo size="md" />
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Dashboard</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Manage customers and program performance</p>
+              </div>
             </div>
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="border-border text-card-foreground hover:bg-muted bg-transparent w-full sm:w-auto"
+              className="border-border text-card-foreground hover:bg-muted hover:text-card-foreground bg-transparent w-full sm:w-auto cursor-pointer"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout

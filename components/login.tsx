@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Shield, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+import { Logo } from "@/components/logo"
 
 export function Login() {
   const [email, setEmail] = useState("")
@@ -16,24 +17,26 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [hasRedirected, setHasRedirected] = useState(false)
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
-  // Redirect if already logged in
+  // Only redirect if we have a session and haven't redirected yet
   useEffect(() => {
-    if (session) {
+    if (session && !hasRedirected && status === "authenticated") {
+      setHasRedirected(true)
       const user = session.user as any
       const hasAdminRole = user?.roles?.some((role: any) => 
         role.name === "super admin" || role.name === "admin"
       )
       
       if (hasAdminRole) {
-        router.push("/admin")
+        router.push("/dashboard/admin")
       } else {
-        router.push("/")
+        router.push("/dashboard")
       }
     }
-  }, [session, router])
+  }, [session, router, hasRedirected, status])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,12 +63,13 @@ export function Login() {
     }
   }
 
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-            <Shield className="w-8 h-8 text-primary-foreground" />
+          <div className="flex justify-center">
+            <Logo size="lg" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-card-foreground">Login</CardTitle>
