@@ -31,7 +31,7 @@ This client application provides a complete frontend solution featuring:
 2. **Configure your environment variables:**
    ```bash
    # API Configuration
-   NEXT_PUBLIC_API_URL=http://laravel.test/api/v1
+   NEXT_PUBLIC_API_URL=http://laravel.test
    NEXT_PUBLIC_API_KEY=your_api_key_here
 
    # NextAuth Configuration
@@ -58,21 +58,6 @@ docker compose up -d
 # - TypeScript compilation
 ```
 
-### Option 2: Run Client + API Together
-
-From the root directory, start both services:
-
-```bash
-# Start both API and Client
-docker compose --profile default up -d
-```
-
-### Option 3: Run Everything (Full Stack)
-
-```bash
-# Start all services including development tools
-docker compose up -d
-```
 
 ## 🔧 Local Development Setup
 
@@ -95,7 +80,7 @@ pnpm install
 pnpm dev
 
 # Or start on a specific port
-pnpm dev --port 3001
+pnpm dev --port 3000
 ```
 
 ## 🎨 Application Structure
@@ -173,7 +158,7 @@ The application uses a single login page (`/auth/login`) for all users:
 ### Default Admin Credentials
 
 - **Email**: `superadmin@example.com`
-- **Password**: `password`
+- **Password**: `P@ssword!`
 - **Role**: Super Admin
 
 ## 📊 Admin Dashboard Features
@@ -299,7 +284,7 @@ pnpm start
 
 ```bash
 # Production environment variables
-NEXT_PUBLIC_API_URL=https://your-api-domain.com/api/v1
+NEXT_PUBLIC_API_URL=https://your-api-domain.com
 NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your_production_secret
 ```
