@@ -95,12 +95,17 @@ app/
 │   │   └── page.tsx         # Unified login page
 │   └── error/
 │       └── page.tsx         # Auth error handling
-├── admin/
-│   └── page.tsx            # Admin dashboard
-└── api/
-    └── auth/
-        └── [...nextauth]/
-            └── route.ts     # NextAuth API routes
+├── dashboard/
+│   ├── page.tsx            # User dashboard
+│   └── admin/
+│       └── page.tsx        # Admin dashboard
+├── api/
+│   └── auth/
+│       └── [...nextauth]/
+│           └── route.ts     # NextAuth API routes
+├── layout.tsx              # Root layout
+├── globals.css             # Global styles
+└── favicon.ico             # App favicon
 ```
 
 ### Components
@@ -110,17 +115,35 @@ components/
 ├── admin/                   # Admin-specific components
 │   ├── admin-dashboard.tsx  # Main admin dashboard
 │   ├── admin-overview.tsx   # Overview statistics
-│   ├── user-management.tsx # User management interface
 │   ├── admin-analytics.tsx  # Analytics dashboard
-│   └── admin-settings.tsx   # Settings management
+│   ├── admin-settings.tsx   # Settings management
+│   ├── user-management.tsx # User management interface
+│   ├── create-user-modal.tsx # Create user modal
+│   ├── edit-user-modal.tsx  # Edit user modal
+│   ├── view-user-modal.tsx  # View user modal
+│   └── delete-user-modal.tsx # Delete user modal
+├── payment/                 # Payment-related components
+│   ├── payment-modal.tsx    # Payment processing modal
+│   ├── payment-history.tsx  # Payment history display
+│   └── cashback-request.tsx # Cashback request component
 ├── ui/                      # Reusable UI components
 │   ├── button.tsx
 │   ├── card.tsx
 │   ├── table.tsx
+│   ├── dialog.tsx
+│   ├── select.tsx
 │   └── ... (shadcn/ui components)
 ├── login.tsx               # Unified login component
 ├── loyalty-dashboard.tsx   # User loyalty dashboard
-└── ... (other components)
+├── logo.tsx               # Application logo component
+├── achievement-grid.tsx   # Achievement display grid
+├── achievement-notification.tsx # Achievement notifications
+├── badge-showcase.tsx     # Badge display component
+├── points-overview.tsx    # Points summary component
+├── transaction-history.tsx # Transaction history display
+├── auth-provider.tsx      # Authentication provider
+├── redux-provider.tsx     # Redux store provider
+└── theme-provider.tsx     # Theme management provider
 ```
 
 ### State Management
@@ -130,6 +153,7 @@ store/
 ├── index.ts                # Redux store configuration
 ├── entityFactory.ts        # RTK Query factory
 ├── users.ts               # User API slice
+├── roles.ts               # Role API slice
 ├── achievements.ts        # Achievement API slice
 ├── badges.ts              # Badge API slice
 ├── transactions.ts        # Transaction API slice
@@ -160,6 +184,16 @@ The application uses a single login page (`/auth/login`) for all users:
 - **Email**: `superadmin@example.com`
 - **Password**: `P@ssword!`
 - **Role**: Super Admin
+
+### Additional Test Users (from API Seeder)
+
+When the API database is seeded, additional test users are available for testing:
+
+- **John Smith** — Email: `john.smith@example.com`, Password: `password`
+- **Sarah Johnson** — Email: `sarah.johnson@example.com`, Password: `password`
+- **Mike Wilson** — Email: `mike.wilson@example.com`, Password: `password`
+
+These users are created by the `UserSeeder` and can be used for testing different user roles and permissions.
 
 ## 📊 Admin Dashboard Features
 
