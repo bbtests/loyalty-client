@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth-provider'
 import { ReduxProvider } from '@/components/redux-provider'
+import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
             {children}
           </ReduxProvider>
         </AuthProvider>
+        <Toaster />
         <Analytics />
       </body>
     </html>

@@ -30,11 +30,12 @@ export function UserManagement() {
   const loading = usersLoading
 
   // Extract users from API response
-  const users = (usersResponse as any)?.data?.items || []
   const pagination = (usersResponse as any)?.meta?.pagination || {}
 
   // Filter users based on search term (client-side filtering for now)
   const filteredUsers = React.useMemo(() => {
+    const users = (usersResponse as any)?.data?.items || []
+    
     if (!searchTerm) {
       return users
     }
@@ -44,7 +45,7 @@ export function UserManagement() {
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  }, [users, searchTerm])
+  }, [usersResponse, searchTerm])
 
 
   const handlePreviousPage = () => {
@@ -64,7 +65,7 @@ export function UserManagement() {
     if (currentPage !== 1) {
       setCurrentPage(1)
     }
-  }, [searchTerm])
+  }, [searchTerm, currentPage])
 
   // Modal handlers
   const handleViewUser = (user: User) => {

@@ -29,7 +29,7 @@ export function AdminSettings() {
 
   const handleSaveSettings = () => {
     // In real app, this would call API
-    console.log("Saving settings:", settings)
+    // Save settings
   }
 
   const handleDeleteAchievement = async (achievementId: string) => {
@@ -76,7 +76,7 @@ export function AdminSettings() {
                 onChange={(e) => setSettings({ ...settings, pointsPerDollar: Number.parseInt(e.target.value) })}
                 className="bg-input border-border"
               />
-              <p className="text-xs text-muted-foreground">How many points users earn per dollar spent</p>
+              <p className="text-xs text-muted-foreground">How many points users earn per naira spent</p>
             </div>
 
             <div className="space-y-2">

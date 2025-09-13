@@ -8,17 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Trophy, Crown, Gift, Zap, Target, Award, TrendingUp, CreditCard, LogIn, LogOut } from "lucide-react";
+import { Trophy, Crown, Gift, Zap, Target, Award, TrendingUp, CreditCard, LogIn, LogOut, AlertCircle, RefreshCw } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { PointsOverview } from "@/components/points-overview";
 import { AchievementGrid } from "@/components/achievement-grid";
 import { BadgeShowcase } from "@/components/badge-showcase";
 import { TransactionHistory } from "@/components/transaction-history";
+import { LoyaltyPointsHistory } from "@/components/loyalty-points-history";
 import { AchievementNotification } from "@/components/achievement-notification";
 import { PaymentModal } from "@/components/payment/payment-modal";
 import { CashbackRequest } from "@/components/payment/cashback-request";
-import { PaymentHistory } from "@/components/payment/payment-history";
 import { useLoyaltyData } from "@/hooks/use-loyalty-data";
+import { useRealtimeUpdates } from "@/hooks/use-realtime-updates";
+import { RealtimeStatus } from "@/components/realtime-status";
 
 export function LoyaltyDashboard() {
   const { data: session, status } = useSession()
@@ -29,13 +31,38 @@ export function LoyaltyDashboard() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentProcessed, setPaymentProcessed] = useState(false)
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview")
+  
+  // Enable real-time updates for achievements and badges
+  const { isWebSocketOffline, refreshData: refreshRealtimeData } = useRealtimeUpdates()
 
   // Check if user is authenticated
   const isAuthenticated = status === "authenticated" && session?.user
   const isLoading = status === "loading"
 
   // Only load loyalty data for authenticated users
-  const { loyaltyData, loading: loyaltyLoading, simulateAchievement } = useLoyaltyData()
+  const { loyaltyData, loading: loyaltyLoading, error: loyaltyError, simulateAchievement, refreshData } = useLoyaltyData()
+
+  // Handle tab URL synchronization
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab')
+    const validTabs = ['overview', 'achievements', 'badges', 'loyalty', 'transactions']
+    
+    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl)
+    } else if (!tabFromUrl) {
+      // Set default tab if no tab parameter
+      setActiveTab('overview')
+    }
+  }, [searchParams])
+
+  // Handle tab change and URL update
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', value)
+    router.push(`/dashboard?${params.toString()}`, { scroll: false })
+  }
 
   // Handle payment success redirect and clean up URL
   useEffect(() => {
@@ -45,7 +72,6 @@ export function LoyaltyDashboard() {
       setShowPaymentSuccess(true)
       
       // Show a success message or notification
-      console.log('Payment completed successfully!')
       
       // Clean up URL without triggering navigation using history API
       if (typeof window !== 'undefined') {
@@ -63,23 +89,26 @@ export function LoyaltyDashboard() {
     signOut({ callbackUrl: "/" })
   }
 
-  const handleSimulateAchievement = () => {
+  const handleSimulateAchievement = async () => {
     const newAchievement = {
       id: Date.now(),
       name: "Big Spender",
-      description: "Spent over $500 in a single transaction",
+      description: "Spent over ₦50,000 in a single transaction",
       badge_icon: "diamond",
       unlocked_at: new Date().toISOString(),
     }
 
     setNotificationData(newAchievement)
     setShowNotification(true)
-    simulateAchievement()
+    await simulateAchievement()
 
     setTimeout(() => setShowNotification(false), 4000)
   }
 
-  const handlePaymentSuccess = (transaction: any) => {
+  const handlePaymentSuccess = async (transaction: any) => {
+    // Refresh loyalty data to get updated points and achievements
+    await refreshData()
+    
     // Simulate achievement unlock for large purchases
     if (transaction.amount >= 500) {
       handleSimulateAchievement()
@@ -105,13 +134,57 @@ export function LoyaltyDashboard() {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Connection Status Notification */}
+      {isWebSocketOffline && (
+        <Alert className="border-orange-200 bg-orange-50 text-orange-800">
+          <AlertDescription className="flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Real-time connection offline. Updates may be delayed.
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshRealtimeData}
+              className="ml-4"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Refresh
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Error Notification */}
+      {loyaltyError && (
+        <Alert className="border-red-200 bg-red-50 text-red-800">
+          <AlertDescription className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Trophy className="w-4 h-4 mr-2" />
+              {loyaltyError}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              className="ml-4"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-4">
           <Logo size="md" />
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Loyalty Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Loyalty Dashboard</h1>
+              <RealtimeStatus />
+            </div>
             <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Track your rewards and achievements</p>
           </div>
         </div>
@@ -167,7 +240,7 @@ export function LoyaltyDashboard() {
 
       {/* Main Content Tabs - Only show for authenticated users */}
       {isAuthenticated ? (
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 bg-card h-auto">
           <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <TrendingUp className="w-4 h-4" />
@@ -181,13 +254,13 @@ export function LoyaltyDashboard() {
             <Award className="w-4 h-4" />
             <span className="text-xs sm:text-sm">Badges</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
+          <TabsTrigger value="loyalty" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <Target className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">History</span>
+            <span className="text-xs sm:text-sm">Loyalty</span>
           </TabsTrigger>
-          <TabsTrigger value="payments" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
+          <TabsTrigger value="transactions" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-1">
             <CreditCard className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Payments</span>
+            <span className="text-xs sm:text-sm">Transactions</span>
           </TabsTrigger>
         </TabsList>
 
@@ -265,17 +338,17 @@ export function LoyaltyDashboard() {
         </TabsContent>
 
         <TabsContent value="badges">
-          <BadgeShowcase badges={loyaltyData?.badges || []} currentBadge={loyaltyData?.current_badge} />
+          <BadgeShowcase badges={loyaltyData?.badges || []} currentBadge={loyaltyData?.current_badge || null} />
         </TabsContent>
 
-        <TabsContent value="history">
-          <TransactionHistory />
+        <TabsContent value="loyalty">
+          <LoyaltyPointsHistory />
         </TabsContent>
 
-        <TabsContent value="payments" className="space-y-4 sm:space-y-6">
+        <TabsContent value="transactions" className="space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
-              <PaymentHistory />
+              <TransactionHistory />
             </div>
             <div>
               <CashbackRequest

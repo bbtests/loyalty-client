@@ -2,20 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Medal, Crown, Star, Award } from "lucide-react"
-
-interface BadgeData {
-  id: number
-  name: string
-  description: string
-  icon: string
-  tier: number
-  earned_at: string
-}
+import { Medal, Crown, Star, Award, Loader2 } from "lucide-react"
+import type { Badge as BadgeType, CurrentBadge } from "@/types/api"
+import { useGetBadgesQuery } from "@/store/badges"
 
 interface BadgeShowcaseProps {
-  badges: BadgeData[]
-  currentBadge: BadgeData | null
+  badges: BadgeType[]
+  currentBadge: CurrentBadge | null
+}
+
+interface TierInfo {
+  tier: number
+  name: string
+  description: string
+  points_required: number
+  icon: string
 }
 
 const tierColors = {
@@ -33,12 +34,75 @@ const tierIcons = {
 }
 
 export function BadgeShowcase({ badges, currentBadge }: BadgeShowcaseProps) {
-  const allTiers = [
-    { tier: 1, name: "Bronze Member", description: "Welcome to our loyalty program", points_required: 0 },
-    { tier: 2, name: "Silver Member", description: "Reach 2500 points", points_required: 2500 },
-    { tier: 3, name: "Gold Member", description: "Reach 10000 points", points_required: 10000 },
-    { tier: 4, name: "Platinum Member", description: "Reach 25000 points", points_required: 25000 },
+  // Fetch all available badges from the backend
+  const { data: allBadges, isLoading, error } = useGetBadgesQuery()
+
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Loading badges...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-destructive mb-2">Failed to load badges</p>
+            <p className="text-sm text-muted-foreground">
+              Please try refreshing the page
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Get all unique tiers from the backend badges, sorted by tier
+  // Handle different possible data structures
+  let badgesArray: any[] = []
+  
+  if (allBadges) {
+    if (Array.isArray(allBadges)) {
+      // Direct array
+      badgesArray = allBadges
+    } else if ((allBadges as any).data && Array.isArray((allBadges as any).data)) {
+      // Wrapped in data property
+      badgesArray = (allBadges as any).data
+    } else if ((allBadges as any).data && (allBadges as any).data.items && Array.isArray((allBadges as any).data.items)) {
+      // API response format with items
+      badgesArray = (allBadges as any).data.items
+    }
+  }
+
+  const allTiers: TierInfo[] = badgesArray
+    ?.filter((badge: any) => badge.is_active)
+    ?.sort((a: any, b: any) => a.tier - b.tier)
+    ?.map((badge: any): TierInfo => ({
+      tier: badge.tier,
+      name: badge.name,
+      description: badge.description,
+      points_required: badge.requirements?.points_minimum || 0,
+      icon: badge.icon,
+    })) || []
+
+  // Fallback to hardcoded tiers if no badges are available
+  const fallbackTiers: TierInfo[] = [
+    { tier: 1, name: "Bronze Member", description: "Welcome to our loyalty program", points_required: 0, icon: "medal" },
+    { tier: 2, name: "Silver Member", description: "Reach 2500 points", points_required: 2500, icon: "star" },
+    { tier: 3, name: "Gold Member", description: "Reach 10000 points", points_required: 10000, icon: "crown" },
+    { tier: 4, name: "Platinum Member", description: "Reach 25000 points", points_required: 25000, icon: "award" },
   ]
+
+  const tiersToShow: TierInfo[] = allTiers.length > 0 ? allTiers : fallbackTiers
 
   return (
     <div className="space-y-8">
@@ -50,7 +114,7 @@ export function BadgeShowcase({ badges, currentBadge }: BadgeShowcaseProps) {
               <Crown className="w-10 h-10" />
             </div>
             <CardTitle className="text-2xl">Current Badge: {currentBadge.name}</CardTitle>
-            <p className="opacity-90">{currentBadge.description}</p>
+            <p className="opacity-90">Your current membership tier</p>
           </CardHeader>
           <CardContent className="text-center">
             <Badge variant="secondary" className="bg-white/20 text-white">
@@ -63,11 +127,21 @@ export function BadgeShowcase({ badges, currentBadge }: BadgeShowcaseProps) {
       {/* Badge Progression */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-foreground">Badge Progression</h2>
+        
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {allTiers.map((tier) => {
-            const earnedBadge = badges.find((b) => b.tier === tier.tier)
-            const IconComponent = tierIcons[tier.tier as keyof typeof tierIcons]
+          {tiersToShow.map((tier: TierInfo) => {
+            // More robust badge matching - try multiple approaches
+            let earnedBadge = badges.find((b) => b.tier === tier.tier)
+            
+            // If not found by tier, try by name as fallback
+            if (!earnedBadge) {
+              earnedBadge = badges.find((b) => b.name.toLowerCase() === tier.name.toLowerCase())
+            }
+            
+            
+            // Use dynamic icon mapping or fallback to tier-based icons
+            const IconComponent = tierIcons[tier.tier as keyof typeof tierIcons] || Medal
             const isEarned = !!earnedBadge
             const isCurrent = currentBadge?.tier === tier.tier
 
@@ -91,7 +165,7 @@ export function BadgeShowcase({ badges, currentBadge }: BadgeShowcaseProps) {
                     {tier.description}
                   </p>
 
-                  {isEarned ? (
+                  {isEarned && earnedBadge ? (
                     <Badge variant="default" className="bg-accent text-accent-foreground">
                       Earned {new Date(earnedBadge.earned_at).toLocaleDateString()}
                     </Badge>

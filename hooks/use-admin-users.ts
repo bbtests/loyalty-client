@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 // Mock user data - in real app, this would come from API
 const mockUsers = [
@@ -54,39 +54,39 @@ const mockUsers = [
     member_since: "2023-07-18",
     last_activity: "2024-01-15 13:40:00",
   },
-]
+];
 
 export function useAdminUsers() {
-  const [users, setUsers] = useState(mockUsers)
-  const [loading, setLoading] = useState(true)
+  const [users, setUsers] = useState(mockUsers);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Simulate API call
     const timer = setTimeout(() => {
-      setUsers(mockUsers)
-      setLoading(false)
-    }, 600)
+      setUsers(mockUsers);
+      setLoading(false);
+    }, 600);
 
-    return () => clearTimeout(timer)
-  }, [])
+    return () => clearTimeout(timer);
+  }, []);
 
   const searchUsers = (searchTerm: string) => {
     if (!searchTerm) {
-      setUsers(mockUsers)
-      return
+      setUsers(mockUsers);
+      return;
     }
 
     const filtered = mockUsers.filter(
       (user) =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    setUsers(filtered)
-  }
+    );
+    setUsers(filtered);
+  };
 
   return {
     users,
     loading,
     searchUsers,
-  }
+  };
 }

@@ -6,9 +6,10 @@ import { transactions } from "./transactions";
 import { loyaltyPoints } from "./loyalty-points";
 import { cashbackPayments } from "./cashback-payments";
 import { roles } from "./roles";
+import { loyaltyApi } from "./loyalty";
 
-export const createAutoResetMiddleware = (storeApis: any) =>
-  (storeAPI: any) => (next: any) => (action: AnyAction) => {
+export const createAutoResetMiddleware =
+  (storeApis: any) => (storeAPI: any) => (next: any) => (action: AnyAction) => {
     // Check for fulfilled mutation actions
     if (action.type && action.type.endsWith("/fulfilled")) {
       // Pattern: brandsApi/executeMutation/fulfilled
@@ -53,6 +54,7 @@ export const storeApis = {
   loyaltyPoints,
   cashbackPayments,
   roles,
+  loyaltyApi,
 };
 
 export const store = configureStore({
@@ -64,6 +66,7 @@ export const store = configureStore({
     [loyaltyPoints.reducerPath]: loyaltyPoints.reducer,
     [cashbackPayments.reducerPath]: cashbackPayments.reducer,
     [roles.reducerPath]: roles.reducer,
+    [loyaltyApi.reducerPath]: loyaltyApi.reducer,
   } as any,
   middleware: (getDefaultMiddleware) =>
     (getDefaultMiddleware() as any).concat([
@@ -75,6 +78,7 @@ export const store = configureStore({
       loyaltyPoints.middleware,
       cashbackPayments.middleware,
       roles.middleware,
+      loyaltyApi.middleware,
     ]) as any,
 });
 

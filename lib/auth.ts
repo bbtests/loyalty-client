@@ -49,7 +49,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        Object.assign(session, { user: token.user, accessToken: (token as any).accessToken });
+        Object.assign(session, {
+          user: token.user,
+          accessToken: (token as any).accessToken,
+        });
       }
       return session;
     },

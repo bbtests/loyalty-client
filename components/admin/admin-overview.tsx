@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Trophy, Gift, TrendingUp, DollarSign, Award } from "lucide-react"
+import { Users, Trophy, Gift, TrendingUp, Banknote, Award } from "lucide-react"
 import { useGetUsersQuery } from "@/store/users"
 import { useGetAchievementsQuery } from "@/store/achievements"
 import { useGetBadgesQuery } from "@/store/badges"
@@ -119,14 +119,14 @@ export function AdminOverview() {
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-card-foreground">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-accent" />
+            <Banknote className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-card-foreground">
-              ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₦{totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-muted-foreground">
-              Avg: ${isNaN(averageTransaction) ? '0.00' : averageTransaction.toFixed(2)}
+              Avg: ₦{isNaN(averageTransaction) ? '0.00' : averageTransaction.toFixed(2)}
             </p>
           </CardContent>
         </Card>
