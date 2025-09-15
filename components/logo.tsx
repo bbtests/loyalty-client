@@ -39,3 +39,4 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
     </button>
   )
 }
+
