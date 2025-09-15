@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useLoyaltyData } from "@/hooks/use-loyalty-data";
+import { useSimulateAchievementMutation } from "@/store/achievements";
 
 // Mock the store hooks
 const mockUseGetUserLoyaltyDataQuery = jest.fn();
@@ -14,10 +15,17 @@ jest.mock("@/store/loyalty", () => ({
   useProcessPurchaseAfterPaymentMutation: () => mockUseProcessPurchaseAfterPaymentMutation(),
 }));
 
+jest.mock("@/store/achievements", () => ({
+  useSimulateAchievementMutation: jest.fn(),
+}));
+
+// Get the mocked hook
+const mockUseSimulateAchievementMutation = useSimulateAchievementMutation as jest.MockedFunction<typeof useSimulateAchievementMutation>;
+
 // Mock next-auth
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
-    data: { user: { id: "1" } },
+    data: { user: { id: "1" }, accessToken: "mock-token" },
   }),
 }));
 
@@ -27,6 +35,7 @@ jest.useFakeTimers();
 describe("useLoyaltyData Hook", () => {
   beforeEach(() => {
     jest.clearAllTimers();
+    jest.clearAllMocks();
     
     // Set up default mocks
     mockUseGetUserLoyaltyDataQuery.mockReturnValue({
@@ -47,6 +56,16 @@ describe("useLoyaltyData Hook", () => {
     mockUseProcessPurchaseAfterPaymentMutation.mockReturnValue([
       jest.fn(),
     ]);
+
+    // Mock successful simulateAchievementMutation response by default
+    const mockMutation = jest.fn().mockImplementation(() => ({
+      unwrap: () => Promise.resolve({
+        id: 1,
+        name: "Test Achievement",
+        description: "Test achievement description",
+      }),
+    }));
+    mockUseSimulateAchievementMutation.mockReturnValue([mockMutation]);
   });
 
   afterEach(() => {
@@ -136,7 +155,8 @@ describe("useLoyaltyData Hook", () => {
       await result.current.simulateAchievement();
     });
 
-    expect(mockRefetch).toHaveBeenCalled();
+    // Should show the modal instead of making API call
+    expect(result.current.showAchievementModal).toBe(true);
   });
 
   it("handles simulate achievement error", async () => {
@@ -147,14 +167,28 @@ describe("useLoyaltyData Hook", () => {
       refetch: jest.fn(),
     });
 
+    // Mock simulateAchievementMutation to throw an error
+    const mockErrorMutation = jest.fn().mockImplementation(() => ({
+      unwrap: () => Promise.reject(new Error("Failed to simulate achievement")),
+    }));
+    mockUseSimulateAchievementMutation.mockReturnValue([mockErrorMutation]);
+
     const { result } = renderHook(() => useLoyaltyData());
 
+    const mockAchievement = {
+      id: 1,
+      name: "Test Achievement",
+      description: "Test description",
+      badge_icon: "trophy",
+      unlocked_at: null,
+    };
+
     await act(async () => {
-      await result.current.simulateAchievement();
+      await result.current.handleAchievementSelection(mockAchievement);
     });
 
     // Should handle error gracefully
-    expect(result.current.error).toBeDefined();
+    expect(result.current.error).toBe("Failed to simulate achievement");
   });
 
   it("refreshes data successfully", () => {
