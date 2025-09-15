@@ -4,7 +4,6 @@ import { achievements } from "./achievements";
 import { badges } from "./badges";
 import { transactions } from "./transactions";
 import { loyaltyPoints } from "./loyalty-points";
-import { cashbackPayments } from "./cashback-payments";
 import { roles } from "./roles";
 import { loyaltyApi } from "./loyalty";
 
@@ -52,7 +51,6 @@ export const storeApis = {
   badges,
   transactions,
   loyaltyPoints,
-  cashbackPayments,
   roles,
   loyaltyApi,
 };
@@ -64,7 +62,6 @@ export const store = configureStore({
     [badges.reducerPath]: badges.reducer,
     [transactions.reducerPath]: transactions.reducer,
     [loyaltyPoints.reducerPath]: loyaltyPoints.reducer,
-    [cashbackPayments.reducerPath]: cashbackPayments.reducer,
     [roles.reducerPath]: roles.reducer,
     [loyaltyApi.reducerPath]: loyaltyApi.reducer,
   } as any,
@@ -76,7 +73,6 @@ export const store = configureStore({
       badges.middleware,
       transactions.middleware,
       loyaltyPoints.middleware,
-      cashbackPayments.middleware,
       roles.middleware,
       loyaltyApi.middleware,
     ]) as any,
