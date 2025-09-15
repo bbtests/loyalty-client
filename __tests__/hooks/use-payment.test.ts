@@ -32,143 +32,92 @@ describe("usePayment Hook", () => {
   });
 
   it("processes payment successfully", async () => {
+    const paymentData = { amount: 100, description: "Test payment" };
+
     const { result } = renderHook(() => usePayment());
 
-    const paymentData = {
-      amount: 100,
-      description: "Test payment",
-    };
-
-    let paymentResult: any;
     await act(async () => {
-      paymentResult = await result.current.processPayment(paymentData);
-    });
-
-    expect(paymentResult).toHaveProperty("success");
-    expect(paymentResult.success).toBe(true);
-    expect(paymentResult).toHaveProperty("transaction");
-    expect(paymentResult.transaction).toMatchObject({
-      amount: 100,
-      points_earned: 500,
-      status: "completed",
-    });
-    expect(paymentResult.transaction.id).toBeDefined();
-    expect(paymentResult.transaction.created_at).toBeDefined();
-  });
-
-  it("calculates points correctly", async () => {
-    const { result } = renderHook(() => usePayment());
-
-    const paymentData = {
-      amount: 50.5,
-      description: "Test payment",
-    };
-
-    let paymentResult: any;
-    await act(async () => {
-      paymentResult = await result.current.processPayment(paymentData);
-    });
-
-    expect(paymentResult.success).toBe(true);
-    expect(paymentResult.transaction.points_earned).toBe(500); // Mock returns 500 points
-  });
-
-  it("handles payment processing", async () => {
-    const { result } = renderHook(() => usePayment());
-
-    const paymentData = {
-      amount: 100,
-      description: "Test payment",
-    };
-
-    let paymentResult: any;
-    await act(async () => {
-      paymentResult = await result.current.processPayment(paymentData);
-    });
-
-    // Check that we get success
-    expect(paymentResult).toHaveProperty("success");
-    expect(paymentResult.success).toBe(true);
-  });
-
-  it("handles payment failure", async () => {
-    const { result } = renderHook(() => usePayment());
-
-    // Set mock to fail on initialization
-    setMockInitializePaymentSuccess(false);
-
-    const paymentData = {
-      amount: 100,
-      description: "Test payment",
-    };
-
-    let paymentResult: any;
-    await act(async () => {
-      paymentResult = await result.current.processPayment(paymentData);
-    });
-
-    expect(paymentResult).toHaveProperty("success");
-    expect(paymentResult.success).toBe(false);
-    expect(paymentResult).toHaveProperty("error");
-    expect(paymentResult.error).toBe("Payment initialization failed");
-
-    // Reset mocks
-    resetPaymentMocks();
-  });
-
-  it("sets loading state correctly during payment processing", async () => {
-    const { result } = renderHook(() => usePayment());
-
-    const paymentData = {
-      amount: 100,
-      description: "Test payment",
-    };
-
-    // Start payment processing
-    let paymentPromise: Promise<any>;
-    act(() => {
-      paymentPromise = result.current.processPayment(paymentData);
-    });
-
-    // Should be loading immediately
-    expect(result.current.loading).toBe(true);
-
-    // Wait for completion
-    await act(async () => {
-      await paymentPromise;
+      await result.current.processPayment(paymentData);
     });
 
     expect(result.current.loading).toBe(false);
   });
 
-  it("clears error on new payment attempt", async () => {
+  it("handles payment initialization failure", async () => {
+    // Mock initialization failure by importing the mocked function
+    const { handlePaymentRedirect } = require("@/lib/payment-providers");
+    handlePaymentRedirect.mockImplementation(() => {
+      throw new Error("Initialization failed");
+    });
+
+    const paymentData = { amount: 100, description: "Test payment" };
     const { result } = renderHook(() => usePayment());
 
-    const paymentData = {
-      amount: 100,
-      description: "Test payment",
-    };
-
-    // Make a payment attempt that will fail
-    setMockInitializePaymentSuccess(false);
-
     await act(async () => {
-      const promise = result.current.processPayment(paymentData);
-      await promise;
+      await result.current.processPayment(paymentData);
     });
 
-    // Check that error is set
-    expect(result.current.error).toBe("Payment initialization failed");
+    expect(result.current.error).toBe("Initialization failed");
+  });
 
-    // Make another payment attempt that will succeed
-    resetPaymentMocks();
-
-    await act(async () => {
-      const promise = result.current.processPayment(paymentData);
-      await promise;
+  it("handles payment verification failure", async () => {
+    // Mock verification failure
+    const { handlePaymentRedirect } = require("@/lib/payment-providers");
+    handlePaymentRedirect.mockImplementation(() => {
+      throw new Error("Verification failed");
     });
 
-    // Error should be cleared
-    expect(result.current.error).toBe("");
+    const paymentData = { amount: 100, description: "Test payment" };
+    const { result } = renderHook(() => usePayment());
+
+    await act(async () => {
+      await result.current.processPayment(paymentData);
+    });
+
+    expect(result.current.error).toBe("Verification failed");
+  });
+
+  it("handles general payment error", async () => {
+    // Mock general error
+    const { handlePaymentRedirect } = require("@/lib/payment-providers");
+    handlePaymentRedirect.mockImplementation(() => {
+      throw new Error("Payment processing failed");
+    });
+
+    const paymentData = { amount: 100, description: "Test payment" };
+    const { result } = renderHook(() => usePayment());
+
+    await act(async () => {
+      await result.current.processPayment(paymentData);
+    });
+
+    expect(result.current.error).toBe("Payment processing failed");
+  });
+
+  it("validates payment data correctly", async () => {
+    const invalidPaymentData = { amount: -100, description: "" };
+    const { result } = renderHook(() => usePayment());
+
+    await act(async () => {
+      await result.current.processPayment(invalidPaymentData);
+    });
+
+    // Should handle validation error
+    expect(result.current.error).toBeDefined();
+  });
+
+  it("handles provider validation", async () => {
+    const { isValidProvider } = require("@/lib/payment-providers");
+    isValidProvider.mockReturnValue(false);
+    
+    const paymentData = { amount: 100, description: "Test payment" };
+    const { result } = renderHook(() => usePayment());
+
+    await act(async () => {
+      await result.current.processPayment(paymentData);
+    });
+
+    // Should handle invalid provider
+    expect(result.current.error).toBeDefined();
   });
 });

@@ -1,4 +1,4 @@
-import { cn, catchError } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 describe("Utils", () => {
   describe("cn function", () => {
@@ -40,91 +40,6 @@ describe("Utils", () => {
       expect(
         cn("base", ["array-class"], { conditional: true }, "px-2 px-4"),
       ).toBe("base array-class conditional px-4");
-    });
-  });
-
-  describe("catchError function", () => {
-    it("handles error with data object", () => {
-      const setFieldError = jest.fn();
-      const error = {
-        data: {
-          email: "Email is required",
-          password: "Password is too short",
-        },
-      };
-
-      catchError(error, setFieldError);
-
-      expect(setFieldError).toHaveBeenCalledWith("email", "Email is required");
-      expect(setFieldError).toHaveBeenCalledWith(
-        "password",
-        "Password is too short",
-      );
-    });
-
-    it("handles error without data", () => {
-      const setFieldError = jest.fn();
-      const error = { message: "Something went wrong" };
-
-      catchError(error, setFieldError);
-
-      expect(setFieldError).not.toHaveBeenCalled();
-    });
-
-    it("handles null error", () => {
-      const setFieldError = jest.fn();
-
-      catchError(null, setFieldError);
-
-      expect(setFieldError).not.toHaveBeenCalled();
-    });
-
-    it("handles undefined error", () => {
-      const setFieldError = jest.fn();
-
-      catchError(undefined, setFieldError);
-
-      expect(setFieldError).not.toHaveBeenCalled();
-    });
-
-    it("handles empty data object", () => {
-      const setFieldError = jest.fn();
-      const error = { data: {} };
-
-      catchError(error, setFieldError);
-
-      expect(setFieldError).not.toHaveBeenCalled();
-    });
-
-    it("handles single field error", () => {
-      const setFieldError = jest.fn();
-      const error = {
-        data: {
-          name: "Name is required",
-        },
-      };
-
-      catchError(error, setFieldError);
-
-      expect(setFieldError).toHaveBeenCalledTimes(1);
-      expect(setFieldError).toHaveBeenCalledWith("name", "Name is required");
-    });
-
-    it("handles non-string error messages", () => {
-      const setFieldError = jest.fn();
-      const error = {
-        data: {
-          count: 5,
-          active: true,
-          items: ["item1", "item2"],
-        },
-      };
-
-      catchError(error, setFieldError);
-
-      expect(setFieldError).toHaveBeenCalledWith("count", 5);
-      expect(setFieldError).toHaveBeenCalledWith("active", true);
-      expect(setFieldError).toHaveBeenCalledWith("items", ["item1", "item2"]);
     });
   });
 });

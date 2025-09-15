@@ -38,7 +38,6 @@ describe("Redux Store", () => {
     expect(storeApis).toHaveProperty("badges");
     expect(storeApis).toHaveProperty("transactions");
     expect(storeApis).toHaveProperty("loyaltyPoints");
-    expect(storeApis).toHaveProperty("cashbackPayments");
     expect(storeApis).toHaveProperty("roles");
   });
 
@@ -70,7 +69,6 @@ describe("Store Configuration", () => {
     expect(state).toHaveProperty("badgesApi");
     expect(state).toHaveProperty("transactionsApi");
     expect(state).toHaveProperty("loyaltyPointsApi");
-    expect(state).toHaveProperty("cashbackPaymentsApi");
     expect(state).toHaveProperty("rolesApi");
   });
 

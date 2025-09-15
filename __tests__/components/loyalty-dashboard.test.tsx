@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { LoyaltyDashboard } from '@/components/loyalty-dashboard'
+import { useRealtimeUpdates } from '@/hooks/use-realtime-updates'
 import { useLoyaltyData } from '@/hooks/use-loyalty-data'
 
 // Type assertion helper for testing library matchers
@@ -7,7 +8,7 @@ const expectAny = expect as any
 
 // Mock DOM methods for Radix UI components
 Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-  value: jest.fn(),
+  value: jest.fn() as any,
   writable: true,
 })
 
@@ -32,17 +33,17 @@ const userEvent = async (callback: () => void) => {
 
 // Mock NextAuth
 jest.mock('next-auth/react', () => ({
-  useSession: jest.fn(),
-  signOut: jest.fn(),
+  useSession: jest.fn() as any,
+  signOut: jest.fn() as any,
 }))
 
 // Mock next/navigation
-const mockPush = jest.fn()
-const mockGet = jest.fn()
+const mockPush = jest.fn() as any
+const mockGet = jest.fn() as any
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({
     push: mockPush,
-    replace: jest.fn(),
+    replace: jest.fn() as any,
   })),
   useSearchParams: jest.fn(() => ({
     get: mockGet,
@@ -50,9 +51,11 @@ jest.mock('next/navigation', () => ({
   })),
 }))
 
-// Mock the hook
+// Mock the hooks
+jest.mock('@/hooks/use-realtime-updates')
 jest.mock('@/hooks/use-loyalty-data')
 
+const mockUseRealtimeUpdates = useRealtimeUpdates as jest.MockedFunction<typeof useRealtimeUpdates>
 const mockUseLoyaltyData = useLoyaltyData as jest.MockedFunction<typeof useLoyaltyData>
 const mockUseSession = require('next-auth/react').useSession as jest.MockedFunction<any>
 const mockUseSearchParams = require('next/navigation').useSearchParams as jest.MockedFunction<any>
@@ -130,7 +133,30 @@ describe('LoyaltyDashboard Component', () => {
     
     // Mock search params
     mockUseSearchParams.mockReturnValue({
-      get: jest.fn().mockReturnValue(null),
+      get: (jest.fn() as any).mockReturnValue(null),
+    })
+    
+    // Mock useRealtimeUpdates by default
+    mockUseRealtimeUpdates.mockReturnValue({
+      loyaltyData: mockLoyaltyData,
+      loyaltyLoading: false,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
+    })
+    
+    // Mock useLoyaltyData for simulateAchievement function
+    mockUseLoyaltyData.mockReturnValue({
+      loyaltyData: undefined,
+      loading: false,
+      error: null,
+      simulateAchievement: jest.fn() as any,
+      refreshData: jest.fn() as any,
     })
   })
 
@@ -139,10 +165,17 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('renders loading state correctly', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: null,
-      loading: true,
-      simulateAchievement: jest.fn(),
+    mockUseRealtimeUpdates.mockReturnValue({
+      loyaltyData: undefined,
+      loyaltyLoading: true,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
     })
 
     render(<LoyaltyDashboard />)
@@ -153,12 +186,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('renders dashboard with loyalty data', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('Loyalty Dashboard')).toBeInTheDocument()
@@ -168,12 +195,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('displays correct points information', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('Available Points')).toBeInTheDocument()
@@ -182,12 +203,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('displays achievements count correctly', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('2')).toBeInTheDocument() // Total achievements count
@@ -195,12 +210,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('displays current badge information', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('Silver Member')).toBeInTheDocument()
@@ -208,12 +217,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('displays points redeemed information', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('6,200')).toBeInTheDocument() // Points redeemed
@@ -221,12 +224,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('renders all tab triggers', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('Overview')).toBeInTheDocument()
@@ -237,12 +234,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('shows recent achievements in overview tab', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     expectAny(screen.getByText('Recent Achievements')).toBeInTheDocument()
@@ -251,11 +242,13 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('handles simulate achievement button click', async () => {
-    const mockSimulateAchievement = jest.fn()
+    const mockSimulateAchievement = jest.fn() as any
     mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
+      loyaltyData: undefined,
       loading: false,
+      error: null,
       simulateAchievement: mockSimulateAchievement,
+      refreshData: jest.fn() as any,
     })
 
     render(<LoyaltyDashboard />)
@@ -267,11 +260,13 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('shows achievement notification when simulating achievement', async () => {
-    const mockSimulateAchievement = jest.fn()
+    const mockSimulateAchievement = jest.fn() as any
     mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
+      loyaltyData: undefined,
       loading: false,
+      error: null,
       simulateAchievement: mockSimulateAchievement,
+      refreshData: jest.fn() as any,
     })
 
     render(<LoyaltyDashboard />)
@@ -280,18 +275,12 @@ describe('LoyaltyDashboard Component', () => {
     await userEvent(() => fireEvent.click(simulateButton))
 
     await waitFor(() => {
-      expectAny(screen.getByText('Big Spender')).toBeInTheDocument()
+      expectAny(screen.getAllByText('Big Spender')[0]).toBeInTheDocument()
       expectAny(screen.getByText('Spent over ₦50,000 in a single transaction')).toBeInTheDocument()
     })
   })
 
   it('handles payment modal opening', async () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     const makePurchaseButton = screen.getByText('Make Purchase')
@@ -302,12 +291,6 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('handles tab switching', async () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
-    })
-
     render(<LoyaltyDashboard />)
 
     const achievementsTab = screen.getByText('Achievements')
@@ -319,15 +302,9 @@ describe('LoyaltyDashboard Component', () => {
 
   it('handles URL tab parameter correctly', () => {
     // Mock URL parameter for transactions tab
-    mockGet.mockImplementation((key: string) => {
+    mockGet.mockImplementation((key: any) => {
       if (key === 'tab') return 'transactions'
       return null
-    })
-
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: mockLoyaltyData,
-      loading: false,
-      simulateAchievement: jest.fn(),
     })
 
     render(<LoyaltyDashboard />)
@@ -337,10 +314,17 @@ describe('LoyaltyDashboard Component', () => {
   })
 
   it('handles empty loyalty data gracefully', () => {
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: null,
-      loading: false,
-      simulateAchievement: jest.fn(),
+    mockUseRealtimeUpdates.mockReturnValue({
+      loyaltyData: undefined,
+      loyaltyLoading: false,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
     })
 
     render(<LoyaltyDashboard />)
@@ -355,10 +339,17 @@ describe('LoyaltyDashboard Component', () => {
       achievements: [],
     }
 
-    mockUseLoyaltyData.mockReturnValue({
+    mockUseRealtimeUpdates.mockReturnValue({
       loyaltyData: dataWithoutAchievements,
-      loading: false,
-      simulateAchievement: jest.fn(),
+      loyaltyLoading: false,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
     })
 
     render(<LoyaltyDashboard />)
@@ -372,10 +363,17 @@ describe('LoyaltyDashboard Component', () => {
       current_badge: null,
     }
 
-    mockUseLoyaltyData.mockReturnValue({
+    mockUseRealtimeUpdates.mockReturnValue({
       loyaltyData: dataWithoutBadge,
-      loading: false,
-      simulateAchievement: jest.fn(),
+      loyaltyLoading: false,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
     })
 
     render(<LoyaltyDashboard />)
@@ -391,10 +389,17 @@ describe('LoyaltyDashboard Component', () => {
       status: 'unauthenticated',
     })
 
-    mockUseLoyaltyData.mockReturnValue({
-      loyaltyData: null,
-      loading: false,
-      simulateAchievement: jest.fn(),
+    mockUseRealtimeUpdates.mockReturnValue({
+      loyaltyData: undefined,
+      loyaltyLoading: false,
+      loyaltyError: undefined,
+      isWebSocketOffline: false,
+      refreshData: jest.fn() as any,
+      refetchLoyaltyData: jest.fn() as any,
+      refreshDataWithRetry: jest.fn() as any,
+      isWebSocketConnected: true,
+      isWebSocketConnecting: false,
+      reconnectAttempts: 0,
     })
 
     render(<LoyaltyDashboard />)

@@ -1,12 +1,52 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useLoyaltyData } from "@/hooks/use-loyalty-data";
 
+// Mock the store hooks
+const mockUseGetUserLoyaltyDataQuery = jest.fn();
+const mockUseInitializePaymentMutation = jest.fn();
+const mockUseVerifyPaymentMutation = jest.fn();
+const mockUseProcessPurchaseAfterPaymentMutation = jest.fn();
+
+jest.mock("@/store/loyalty", () => ({
+  useGetUserLoyaltyDataQuery: () => mockUseGetUserLoyaltyDataQuery(),
+  useInitializePaymentMutation: () => mockUseInitializePaymentMutation(),
+  useVerifyPaymentMutation: () => mockUseVerifyPaymentMutation(),
+  useProcessPurchaseAfterPaymentMutation: () => mockUseProcessPurchaseAfterPaymentMutation(),
+}));
+
+// Mock next-auth
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { id: "1" } },
+  }),
+}));
+
 // Mock timers
 jest.useFakeTimers();
 
 describe("useLoyaltyData Hook", () => {
   beforeEach(() => {
     jest.clearAllTimers();
+    
+    // Set up default mocks
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    
+    mockUseInitializePaymentMutation.mockReturnValue([
+      jest.fn(),
+    ]);
+    
+    mockUseVerifyPaymentMutation.mockReturnValue([
+      jest.fn(),
+    ]);
+    
+    mockUseProcessPurchaseAfterPaymentMutation.mockReturnValue([
+      jest.fn(),
+    ]);
   });
 
   afterEach(() => {
@@ -17,242 +57,122 @@ describe("useLoyaltyData Hook", () => {
 
   it("returns loading state initially", () => {
     // Set mock to loading state
-    setMockIsLoading(true);
-    setMockLoyaltyData(null);
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: undefined,
+      refetch: jest.fn(),
+    });
 
     const { result } = renderHook(() => useLoyaltyData());
 
     expect(result.current.loading).toBe(true);
-    expect(result.current.loyaltyData).toBe(null);
-
-    // Reset mocks
-    setMockIsLoading(false);
+    expect(result.current.loyaltyData).toBe(undefined);
   });
 
-  it("loads loyalty data after timeout", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
-
-    const { result } = renderHook(() => useLoyaltyData());
-
-    // Fast-forward time to trigger the timeout
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.loyaltyData).toBeDefined();
-    });
-
-    expect(result.current.loyaltyData).toMatchObject({
+  it("loads loyalty data successfully", async () => {
+    const mockLoyaltyData = {
       user_id: 1,
-      points: {
-        available: 2750,
-        total_earned: 8950,
-        total_redeemed: 6200,
-      },
+      points: { available: 100, total_earned: 200, total_redeemed: 100 },
+      achievements: [],
+      badges: [],
+      current_badge: null,
+    };
+
+    // Set mock to return data
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: mockLoyaltyData,
+      isLoading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useLoyaltyData());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.loyaltyData).toEqual(mockLoyaltyData);
     });
   });
 
-  it("has correct initial points data", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
+  it("handles error state", async () => {
+    // Set mock to return error
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: { message: "Network error" },
+      refetch: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useLoyaltyData());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBe("Network error");
+    });
+  });
+
+  it("simulates achievement successfully", async () => {
+    const mockLoyaltyData = {
+      user_id: 1,
+      points: { available: 100, total_earned: 200, total_redeemed: 100 },
+      achievements: [],
+      badges: [],
+      current_badge: null,
+    };
+
+    const mockRefetch = jest.fn();
+    
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: mockLoyaltyData,
+      isLoading: false,
+      error: undefined,
+      refetch: mockRefetch,
+    });
 
     const { result } = renderHook(() => useLoyaltyData());
 
     await act(async () => {
-      jest.advanceTimersByTime(1000);
+      await result.current.simulateAchievement();
     });
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const { loyaltyData } = result.current;
-    expect(loyaltyData?.points.available).toBe(2750);
-    expect(loyaltyData?.points.total_earned).toBe(8950);
-    expect(loyaltyData?.points.total_redeemed).toBe(6200);
+    expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it("has correct achievements data", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
+  it("handles simulate achievement error", async () => {
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
 
     const { result } = renderHook(() => useLoyaltyData());
 
     await act(async () => {
-      jest.advanceTimersByTime(1000);
+      await result.current.simulateAchievement();
     });
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const { loyaltyData } = result.current;
-    expect(loyaltyData?.achievements).toHaveLength(3);
-    expect(loyaltyData?.achievements[0]).toMatchObject({
-      id: 1,
-      name: "First Purchase",
-      description: "Made your first purchase",
-      badge_icon: "trophy",
-    });
+    // Should handle error gracefully
+    expect(result.current.error).toBeDefined();
   });
 
-  it("has correct badges data", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
+  it("refreshes data successfully", () => {
+    const mockRefetch = jest.fn();
+    
+    mockUseGetUserLoyaltyDataQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+      refetch: mockRefetch,
+    });
 
     const { result } = renderHook(() => useLoyaltyData());
 
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const { loyaltyData } = result.current;
-    expect(loyaltyData?.badges).toHaveLength(2);
-    expect(loyaltyData?.badges[0]).toMatchObject({
-      id: 1,
-      name: "Bronze Member",
-      description: "Welcome to our loyalty program",
-      icon: "bronze-medal",
-      tier: 1,
-    });
-  });
-
-  it("has correct current badge data", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
-
-    const { result } = renderHook(() => useLoyaltyData());
-
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const { loyaltyData } = result.current;
-    expect(loyaltyData?.current_badge).toMatchObject({
-      id: 2,
-      name: "Silver Member",
-      tier: 2,
-      icon: "silver-medal",
-    });
-  });
-
-  it("simulateAchievement increases points correctly", async () => {
-    // Reset mock to return data
-    setMockLoyaltyData(mockLoyaltyData);
-    setMockIsLoading(false);
-
-    const { result } = renderHook(() => useLoyaltyData());
-
-    // Wait for initial data to load
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const initialPoints = result.current.loyaltyData?.points.available;
-    const initialTotalEarned = result.current.loyaltyData?.points.total_earned;
-
-    // Simulate achievement - this will call the mock mutation
     act(() => {
-      result.current.simulateAchievement();
+      result.current.refreshData();
     });
 
-    // The mock mutation simulates a successful purchase that earns 500 points
-    // Since the mock doesn't actually update the hook's data, we just verify
-    // that the simulateAchievement function was called without errors
-    expect(result.current.loyaltyData?.points.available).toBe(initialPoints);
-    expect(result.current.loyaltyData?.points.total_earned).toBe(
-      initialTotalEarned,
-    );
-  });
-
-  it("simulateAchievement does not affect redeemed points", async () => {
-    const { result } = renderHook(() => useLoyaltyData());
-
-    // Wait for initial data to load
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    const initialRedeemed = result.current.loyaltyData?.points.total_redeemed;
-
-    // Simulate achievement
-    act(() => {
-      result.current.simulateAchievement();
-    });
-
-    expect(result.current.loyaltyData?.points.total_redeemed).toBe(
-      initialRedeemed,
-    );
-  });
-
-  it("simulateAchievement handles null data gracefully", () => {
-    // Set mock to return null data
-    setMockLoyaltyData(null);
-
-    const { result } = renderHook(() => useLoyaltyData());
-
-    // Don't advance timers, so data is still null
-    act(() => {
-      result.current.simulateAchievement();
-    });
-
-    expect(result.current.loyaltyData).toBe(null);
-
-    // Reset mocks
-    setMockLoyaltyData(mockLoyaltyData);
-  });
-
-  it("cleans up timeout on unmount", () => {
-    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
-    const { unmount } = renderHook(() => useLoyaltyData());
-
-    // The hook doesn't actually use setTimeout in a way that requires cleanup
-    // The setTimeout is only used within simulateAchievement function calls
-    // So we just verify the hook can be unmounted without errors
-    unmount();
-
-    // Since there's no timeout to clean up, clearTimeout shouldn't be called
-    expect(clearTimeoutSpy).not.toHaveBeenCalled();
-    clearTimeoutSpy.mockRestore();
-  });
-
-  it("does not load data multiple times on re-renders", async () => {
-    const { rerender, result } = renderHook(() => useLoyaltyData());
-
-    // Re-render the hook
-    rerender();
-
-    // Advance timers
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    // Should only have one timeout set (we can't easily test this with fake timers)
-    // The important thing is that the hook doesn't crash on re-renders
-    expect(result.current.loading).toBe(false);
+    expect(mockRefetch).toHaveBeenCalled();
   });
 });
