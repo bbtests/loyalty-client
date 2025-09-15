@@ -141,13 +141,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: mockLoyaltyData,
       loyaltyLoading: false,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isConnected: true,
+      isConnecting: false,
+      isOffline: false,
+      status: 'connected' as const,
+      reconnectAttempts: 0,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
-      reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
     })
     
     // Mock useLoyaltyData for simulateAchievement function
@@ -156,7 +160,10 @@ describe('LoyaltyDashboard Component', () => {
       loading: false,
       error: null,
       simulateAchievement: jest.fn() as any,
+      handleAchievementSelection: jest.fn() as any,
       refreshData: jest.fn() as any,
+      showAchievementModal: false,
+      setShowAchievementModal: jest.fn() as any,
     })
   })
 
@@ -169,13 +176,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: undefined,
       loyaltyLoading: true,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isOffline: false,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
+      isConnected: true,
+      isConnecting: false,
       reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
+      status: 'connected' as const,
     })
 
     render(<LoyaltyDashboard />)
@@ -248,7 +259,10 @@ describe('LoyaltyDashboard Component', () => {
       loading: false,
       error: null,
       simulateAchievement: mockSimulateAchievement,
+      handleAchievementSelection: jest.fn() as any,
       refreshData: jest.fn() as any,
+      showAchievementModal: false,
+      setShowAchievementModal: jest.fn() as any,
     })
 
     render(<LoyaltyDashboard />)
@@ -266,7 +280,10 @@ describe('LoyaltyDashboard Component', () => {
       loading: false,
       error: null,
       simulateAchievement: mockSimulateAchievement,
+      handleAchievementSelection: jest.fn() as any,
       refreshData: jest.fn() as any,
+      showAchievementModal: false,
+      setShowAchievementModal: jest.fn() as any,
     })
 
     render(<LoyaltyDashboard />)
@@ -318,13 +335,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: undefined,
       loyaltyLoading: false,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isOffline: false,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
+      isConnected: true,
+      isConnecting: false,
       reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
+      status: 'connected' as const,
     })
 
     render(<LoyaltyDashboard />)
@@ -343,13 +364,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: dataWithoutAchievements,
       loyaltyLoading: false,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isOffline: false,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
+      isConnected: true,
+      isConnecting: false,
       reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
+      status: 'connected' as const,
     })
 
     render(<LoyaltyDashboard />)
@@ -367,13 +392,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: dataWithoutBadge,
       loyaltyLoading: false,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isOffline: false,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
+      isConnected: true,
+      isConnecting: false,
       reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
+      status: 'connected' as const,
     })
 
     render(<LoyaltyDashboard />)
@@ -393,13 +422,17 @@ describe('LoyaltyDashboard Component', () => {
       loyaltyData: undefined,
       loyaltyLoading: false,
       loyaltyError: undefined,
-      isWebSocketOffline: false,
+      isOffline: false,
       refreshData: jest.fn() as any,
       refetchLoyaltyData: jest.fn() as any,
       refreshDataWithRetry: jest.fn() as any,
-      isWebSocketConnected: true,
-      isWebSocketConnecting: false,
+      isConnected: true,
+      isConnecting: false,
       reconnectAttempts: 0,
+      showAchievementNotification: false,
+      achievementNotificationData: null,
+      setShowAchievementNotification: jest.fn() as any,
+      status: 'connected' as const,
     })
 
     render(<LoyaltyDashboard />)

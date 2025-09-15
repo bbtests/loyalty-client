@@ -64,8 +64,8 @@ describe("useLoyaltyData Hook", () => {
         name: "Test Achievement",
         description: "Test achievement description",
       }),
-    }));
-    mockUseSimulateAchievementMutation.mockReturnValue([mockMutation]);
+    })) as any;
+    mockUseSimulateAchievementMutation.mockReturnValue([mockMutation, { reset: jest.fn() }]);
   });
 
   afterEach(() => {
@@ -170,8 +170,8 @@ describe("useLoyaltyData Hook", () => {
     // Mock simulateAchievementMutation to throw an error
     const mockErrorMutation = jest.fn().mockImplementation(() => ({
       unwrap: () => Promise.reject(new Error("Failed to simulate achievement")),
-    }));
-    mockUseSimulateAchievementMutation.mockReturnValue([mockErrorMutation]);
+    })) as any;
+    mockUseSimulateAchievementMutation.mockReturnValue([mockErrorMutation, { reset: jest.fn() }]);
 
     const { result } = renderHook(() => useLoyaltyData());
 
@@ -180,7 +180,7 @@ describe("useLoyaltyData Hook", () => {
       name: "Test Achievement",
       description: "Test description",
       badge_icon: "trophy",
-      unlocked_at: null,
+      unlocked_at: "2023-01-01T00:00:00Z",
     };
 
     await act(async () => {
