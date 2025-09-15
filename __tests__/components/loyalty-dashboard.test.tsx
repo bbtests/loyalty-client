@@ -37,13 +37,16 @@ jest.mock('next-auth/react', () => ({
 }))
 
 // Mock next/navigation
+const mockPush = jest.fn()
+const mockGet = jest.fn()
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({
-    push: jest.fn(),
+    push: mockPush,
     replace: jest.fn(),
   })),
   useSearchParams: jest.fn(() => ({
-    get: jest.fn(),
+    get: mockGet,
+    toString: jest.fn(() => ''),
   })),
 }))
 
@@ -106,6 +109,8 @@ const mockLoyaltyData = {
 describe('LoyaltyDashboard Component', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPush.mockClear()
+    mockGet.mockClear()
     
     // Suppress console warnings and errors
     jest.spyOn(console, 'warn').mockImplementation(() => {})
@@ -173,7 +178,7 @@ describe('LoyaltyDashboard Component', () => {
 
     expectAny(screen.getByText('Available Points')).toBeInTheDocument()
     expectAny(screen.getByText('Total Earned')).toBeInTheDocument()
-    expectAny(screen.getByText('Next Tier Progress')).toBeInTheDocument()
+    expectAny(screen.getByText('Gold Member')).toBeInTheDocument() // Next tier name instead of generic text
   })
 
   it('displays achievements count correctly', () => {
@@ -227,8 +232,8 @@ describe('LoyaltyDashboard Component', () => {
     expectAny(screen.getByText('Overview')).toBeInTheDocument()
     expectAny(screen.getByText('Achievements')).toBeInTheDocument()
     expectAny(screen.getByText('Badges')).toBeInTheDocument()
-    expectAny(screen.getByText('History')).toBeInTheDocument()
-    expectAny(screen.getByText('Payments')).toBeInTheDocument()
+    expectAny(screen.getByText('Loyalty')).toBeInTheDocument()
+    expectAny(screen.getByText('Transactions')).toBeInTheDocument()
   })
 
   it('shows recent achievements in overview tab', () => {
@@ -276,7 +281,7 @@ describe('LoyaltyDashboard Component', () => {
 
     await waitFor(() => {
       expectAny(screen.getByText('Big Spender')).toBeInTheDocument()
-      expectAny(screen.getByText('Spent over $500 in a single transaction')).toBeInTheDocument()
+      expectAny(screen.getByText('Spent over ₦50,000 in a single transaction')).toBeInTheDocument()
     })
   })
 
@@ -310,6 +315,25 @@ describe('LoyaltyDashboard Component', () => {
 
     // The tab should be active (this would require more complex testing to verify the actual content)
     expectAny(achievementsTab).toBeInTheDocument()
+  })
+
+  it('handles URL tab parameter correctly', () => {
+    // Mock URL parameter for transactions tab
+    mockGet.mockImplementation((key: string) => {
+      if (key === 'tab') return 'transactions'
+      return null
+    })
+
+    mockUseLoyaltyData.mockReturnValue({
+      loyaltyData: mockLoyaltyData,
+      loading: false,
+      simulateAchievement: jest.fn(),
+    })
+
+    render(<LoyaltyDashboard />)
+    
+    // Should render the dashboard with transactions tab parameter
+    expectAny(screen.getByText('Loyalty Dashboard')).toBeInTheDocument()
   })
 
   it('handles empty loyalty data gracefully', () => {
