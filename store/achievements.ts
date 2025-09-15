@@ -1,7 +1,7 @@
 import type { Achievement } from "../types/achievement";
 import { createEntity } from "./entityFactory";
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { apiClient } from "../lib/api-client";
+import { apiClient } from "@/lib/api-client";
 
 export const achievements = createEntity<Achievement>({
   reducerPath: "achievementsApi",

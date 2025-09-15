@@ -75,6 +75,7 @@ describe("ApiClient", () => {
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
         "/test-endpoint",
         undefined,
+        { showToast: true },
       );
       expect(result).toEqual(mockResponse);
     });
@@ -122,7 +123,7 @@ describe("ApiClient", () => {
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         "/test-endpoint",
         postData,
-        undefined,
+        { showToast: true },
       );
       expect(result).toEqual(mockResponse);
     });
@@ -183,7 +184,7 @@ describe("ApiClient", () => {
       expect(mockAxiosInstance.put).toHaveBeenCalledWith(
         "/test-endpoint/1",
         putData,
-        undefined,
+        { showToast: true },
       );
       expect(result).toEqual(mockResponse);
     });
@@ -212,6 +213,7 @@ describe("ApiClient", () => {
       expect(mockAxiosInstance.delete).toHaveBeenCalledWith(
         "/test-endpoint/1",
         undefined,
+        { showToast: true },
       );
       expect(result).toEqual(mockResponse);
     });

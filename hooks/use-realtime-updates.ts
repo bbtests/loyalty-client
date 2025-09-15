@@ -238,7 +238,7 @@ export function useRealtimeUpdates(eventHandlers: WebSocketEventHandlers = {}) {
       });
 
       // Set up event listeners with consolidated handling
-      channel.listen("achievement.unlocked", (data: any) => {
+      channel.listen(".achievement.unlocked", (data: any) => {
         console.log('🎉 Achievement unlocked via WebSocket', data);
         console.log('🎉 Achievement data received:', {
           achievement: data.achievement,
@@ -256,7 +256,7 @@ export function useRealtimeUpdates(eventHandlers: WebSocketEventHandlers = {}) {
       });
 
 
-      channel.listen("badge.unlocked", (data: any) => {
+      channel.listen(".badge.unlocked", (data: any) => {
         console.log('🏆 Badge unlocked via WebSocket', data);
         if (data.badge) {
           invalidateCache();
@@ -286,8 +286,8 @@ export function useRealtimeUpdates(eventHandlers: WebSocketEventHandlers = {}) {
     const { echoInstance, channel, subscriptionTimeout } = connection;
 
     if (channel) {
-      channel.stopListening("achievement.unlocked");
-      channel.stopListening("badge.unlocked");
+      channel.stopListening(".achievement.unlocked");
+      channel.stopListening(".badge.unlocked");
       echoInstance?.leaveChannel(`user.${userId}`);
     }
 

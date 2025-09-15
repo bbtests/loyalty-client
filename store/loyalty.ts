@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { apiClient } from "../lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import type {
   LoyaltyData,
   PaymentProvidersResponse,

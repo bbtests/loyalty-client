@@ -4,24 +4,18 @@ import { getSession, signOut } from "next-auth/react";
 import { authOptions } from "./auth";
 import { showError } from "./notifications";
 
+// Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+const TOKEN_CACHE_DURATION = 23 * 60 * 60 * 1000; // 23 hours
 
-/**
- * ApiResponse<T>:
- * - For single fetch:   ApiResponse<{ item: Entity }>
- * - For list fetch:     ApiResponse<{ items: Entity[] }>
- * - For other calls: Use { item: Entity }
- */
+// Types
 export interface ApiResponse<T> {
   status: "success" | "error";
   code: number;
   message: string;
   data: T;
-  errors: Array<{
-    field: string;
-    message: string;
-  }>;
+  errors: Array<{ field: string; message: string }>;
   meta: {
     pagination?: {
       current_page: number;
@@ -34,149 +28,148 @@ export interface ApiResponse<T> {
   };
 }
 
-interface ApiRequestConfig extends AxiosRequestConfig {
+export interface ApiRequestConfig extends AxiosRequestConfig {
   showToast?: boolean;
 }
 
-class ApiClient {
+// Error handling utilities
+const createError = (message: string, errors?: any[]): Error => {
+  const error = new Error(message) as any;
+  if (Array.isArray(errors)) {
+    error.errors = errors;
+  }
+  return error;
+};
+
+const formatErrorMessages = (errors: any[]): string => {
+  return errors
+    .map(err => typeof err === "string" ? err : err?.message || "")
+    .filter(Boolean)
+    .join("\n");
+};
+
+export class ApiClient {
   private axiosInstance: AxiosInstance;
   private cachedToken: string | null = null;
   private tokenExpiry: number | null = null;
   private sessionPromise: Promise<any> | null = null;
 
   constructor(baseURL: string) {
-    this.axiosInstance = axios.create({
+    this.axiosInstance = this.createAxiosInstance(baseURL);
+    this.setupInterceptors();
+  }
+
+  private createAxiosInstance(baseURL: string): AxiosInstance {
+    return axios.create({
       baseURL,
-      withCredentials: false,
-      withXSRFToken: false,
+      // withCredentials: true,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
         "x-api-key": API_KEY,
       },
     });
+  }
 
-    this.axiosInstance.interceptors.request.use(async (config) => {
-      const token = await this.getValidToken();
-      if (token) {
-        config.headers = config.headers || {};
-        config.headers["Authorization"] = `Bearer ${token}`;
-      }
-      return config;
-    });
-
+  private setupInterceptors(): void {
+    this.axiosInstance.interceptors.request.use(
+      this.handleRequest.bind(this)
+    );
+    
     this.axiosInstance.interceptors.response.use(
-      (response) => {
-        // Only return data if status is "success"
-        if (response.data && response.data.status === "success") {
-          return response.data;
-        } else {
-          const message =
-            response.data?.message || "API returned an error status";
-          const errors = response.data?.errors;
-          // Only show toast if showToast is not false
-          const showToast =
-            (response.config as ApiRequestConfig)?.showToast !== false;
-          if (showToast) {
-            if (Array.isArray(errors) && errors.length > 0) {
-              const errorMessages = errors
-                .map((err: any) =>
-                  typeof err === "string"
-                    ? err
-                    : err && typeof err.message === "string"
-                      ? err.message
-                      : "",
-                )
-                .filter(Boolean)
-                .join("\n");
-              showError(errorMessages, "Error");
-            } else {
-              showError(message, "Error");
-            }
-          }
-          const errorObj = new Error(message) as any;
-          if (Array.isArray(errors)) {
-            errorObj.errors = errors;
-          }
-          return Promise.reject(errorObj);
-        }
-      },
-      (error) => {
-        let message = "An error occurred";
-        const config = (error.config || {}) as ApiRequestConfig;
-        if (error.response) {
-          message = error.response.data?.message || message;
-        } else if (error.request) {
-          message = "No response from server";
-        } else if (error.message) {
-          message = error.message;
-        }
-        if (message === "Unauthenticated.") {
-          this.handleAuthError();
-        }
-        // Only show toast if showToast is not false
-        const showToast = config.showToast !== false;
-        if (showToast) {
-          const errors = error.response?.data?.errors;
-          if (Array.isArray(errors) && errors.length > 0) {
-            const errorMessages = errors
-              .map((err: any) =>
-                typeof err === "string"
-                  ? err
-                  : err && typeof err.message === "string"
-                    ? err.message
-                    : "",
-              )
-              .filter(Boolean)
-              .join("\n");
-            showError(errorMessages, "Error");
-          } else {
-            showError(message, "Error");
-          }
-        }
-        const errorObj = new Error(message) as any;
-        const errors = error.response?.data?.errors;
-        if (Array.isArray(errors)) {
-          errorObj.errors = errors;
-        }
-        return Promise.reject(errorObj);
-      },
+      this.handleSuccessResponse.bind(this),
+      this.handleErrorResponse.bind(this)
     );
   }
 
+  private async handleRequest(config: any): Promise<any> {
+    const token = await this.getValidToken();
+    
+    if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    
+    // Handle FormData - remove Content-Type header to let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+    
+    return config;
+  }
+
+  private handleSuccessResponse(response: any): any {
+    if (response.data?.status === "success") {
+      return response.data;
+    }
+    
+    return this.createErrorFromResponse(response);
+  }
+
+  private handleErrorResponse(error: any): Promise<never> {
+    const message = this.extractErrorMessage(error);
+    
+    if (message === "Unauthenticated.") {
+      this.handleAuthError();
+    }
+    
+    const config = (error.config || {}) as ApiRequestConfig;
+    this.showErrorIfNeeded(config, error.response?.data?.errors, message);
+    
+    return Promise.reject(createError(message, error.response?.data?.errors));
+  }
+
+  private createErrorFromResponse(response: any): Promise<never> {
+    const message = response.data?.message || "API returned an error status";
+    const errors = response.data?.errors;
+    const config = response.config as ApiRequestConfig;
+    
+    this.showErrorIfNeeded(config, errors, message);
+    
+    return Promise.reject(createError(message, errors));
+  }
+
+  private extractErrorMessage(error: any): string {
+    return error.response?.data?.message || 
+           (error.request ? "No response from server" : error.message) || 
+           "An error occurred";
+  }
+
+  private showErrorIfNeeded(config: ApiRequestConfig, errors: any, message: string): void {
+    const showToast = config.showToast !== false;
+    if (!showToast) return;
+
+    if (Array.isArray(errors) && errors.length > 0) {
+      showError(formatErrorMessages(errors), "Error");
+    } else {
+      showError(message, "Error");
+    }
+  }
+
   private async getValidToken(): Promise<string | null> {
-    // If we have a cached token and it's not expired, use it
+    // Return cached token if valid
     if (this.cachedToken && this.tokenExpiry && Date.now() < this.tokenExpiry) {
       return this.cachedToken;
     }
 
-    // If there's already a session request in progress, wait for it
+    // Wait for existing session request
     if (this.sessionPromise) {
       const session = await this.sessionPromise;
       return session?.accessToken || null;
     }
 
-    // Determine if we're on server or client side and use appropriate NextAuth method
-    let sessionPromise: Promise<any>;
-
-    if (typeof window === "undefined") {
-      // Server-side: use getServerSession
-      sessionPromise = getServerSession(authOptions);
-    } else {
-      // Client-side: use getSession (NextAuth handles caching internally)
-      sessionPromise = getSession();
-    }
-
-    this.sessionPromise = sessionPromise;
-
+    // Create new session request
+    this.sessionPromise = this.createSessionRequest();
+    
     try {
       const session = await this.sessionPromise;
       const token = session?.accessToken || null;
 
       if (token) {
         this.cachedToken = token;
-        // Cache token for 23 hours (NextAuth session is 24 hours, leave 1 hour buffer)
-        this.tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
+        this.tokenExpiry = Date.now() + TOKEN_CACHE_DURATION;
       }
 
       return token;
@@ -185,51 +178,57 @@ class ApiClient {
     }
   }
 
-  /**
-   * Force refresh the cached token on next request
-   */
+  private createSessionRequest(): Promise<any> {
+    return typeof window === "undefined" 
+      ? getServerSession(authOptions) 
+      : getSession();
+  }
+
+  private handleAuthError(): void {
+    this.refreshToken();
+    signOut();
+  }
+
   public refreshToken(): void {
     this.cachedToken = null;
     this.tokenExpiry = null;
     this.sessionPromise = null;
   }
 
-  private handleAuthError(): void {
-    // Clear cached token on auth error
-    this.refreshToken();
-    signOut();
+  private mergeConfig(config?: ApiRequestConfig): ApiRequestConfig {
+    return { showToast: true, ...config };
   }
 
-  async get<T>(
-    endpoint: string,
-    config?: ApiRequestConfig,
-  ): Promise<ApiResponse<T>> {
-    return await this.axiosInstance.get(endpoint, config);
-  }
-
-  async post<T>(
+  private async makeRequest<T>(
+    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
     endpoint: string,
     data?: any,
     config?: ApiRequestConfig,
   ): Promise<ApiResponse<T>> {
-    return await this.axiosInstance.post(endpoint, data, config);
+    const mergedConfig = this.mergeConfig(config);
+    return await this.axiosInstance[method](endpoint, data, mergedConfig);
   }
 
-  async put<T>(
-    endpoint: string,
-    data?: any,
-    config?: ApiRequestConfig,
-  ): Promise<ApiResponse<T>> {
-    return await this.axiosInstance.put(endpoint, data, config);
+  // Public API methods
+  async get<T>(endpoint: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('get', endpoint, undefined, config);
   }
 
-  async delete<T>(
-    endpoint: string,
-    config?: ApiRequestConfig,
-  ): Promise<ApiResponse<T>> {
-    return await this.axiosInstance.delete(endpoint, config);
+  async post<T>(endpoint: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('post', endpoint, data, config);
+  }
+
+  async put<T>(endpoint: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('put', endpoint, data, config);
+  }
+
+  async patch<T>(endpoint: string, data?: any, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('patch', endpoint, data, config);
+  }
+
+  async delete<T>(endpoint: string, config?: ApiRequestConfig): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>('delete', endpoint, undefined, config);
   }
 }
 
-export { ApiClient };
 export const apiClient = new ApiClient(`${API_BASE_URL}/api/v1`);

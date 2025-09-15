@@ -79,7 +79,7 @@ describe("Users Store", () => {
       );
 
       expect(result.data).toEqual(mockResponse);
-      expect(mockApiClient.get).toHaveBeenCalledWith("/users?page=1");
+      expect(mockApiClient.get).toHaveBeenCalledWith("/users?page=1", undefined, undefined);
     });
 
     it("should handle pagination parameters", async () => {
@@ -107,6 +107,8 @@ describe("Users Store", () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         "/users?page=2&per_page=10",
+        undefined,
+        undefined,
       );
     });
 
@@ -126,7 +128,7 @@ describe("Users Store", () => {
 
       await store.dispatch(users.endpoints.getAll.initiate({ search: "john" }));
 
-      expect(mockApiClient.get).toHaveBeenCalledWith("/users?search=john");
+      expect(mockApiClient.get).toHaveBeenCalledWith("/users?search=john", undefined, undefined);
     });
 
     it("should handle API errors", async () => {
@@ -169,7 +171,7 @@ describe("Users Store", () => {
       );
 
       expect(result.data).toEqual(mockUser);
-      expect(mockApiClient.get).toHaveBeenCalledWith("/users/1");
+      expect(mockApiClient.get).toHaveBeenCalledWith("/users/1", undefined, undefined);
     });
 
     it("should handle user not found", async () => {
@@ -219,7 +221,7 @@ describe("Users Store", () => {
       );
 
       expect(result.data).toEqual(mockCreatedUser);
-      expect(mockApiClient.post).toHaveBeenCalledWith("/users", newUser);
+      expect(mockApiClient.post).toHaveBeenCalledWith("/users", newUser, undefined);
     });
 
     it("should handle validation errors", async () => {
@@ -310,7 +312,7 @@ describe("Users Store", () => {
         name: "Updated User",
         email: "updated@example.com",
         role_id: "2",
-      });
+      }, undefined);
     });
 
     it("should update user with new password", async () => {
@@ -352,7 +354,7 @@ describe("Users Store", () => {
         email: "updated@example.com",
         role_id: "1",
         password: "newpassword123",
-      });
+      }, undefined);
     });
 
     it("should handle update errors", async () => {
@@ -390,7 +392,7 @@ describe("Users Store", () => {
       const result = await store.dispatch(users.endpoints.delete.initiate("1"));
 
       expect(result.data).toEqual({ success: true });
-      expect(mockApiClient.delete).toHaveBeenCalledWith("/users/1");
+      expect(mockApiClient.delete).toHaveBeenCalledWith("/users/1", undefined, undefined);
     });
 
     it("should handle delete errors", async () => {
