@@ -17,14 +17,14 @@ import type { User } from "@/types/user"
 export function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
-  
+
   // Modal states
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  
+
   const { data: usersResponse, isLoading: usersLoading, refetch } = useGetUsersQuery({ page: currentPage })
 
   const loading = usersLoading
@@ -35,7 +35,7 @@ export function UserManagement() {
   // Filter users based on search term (client-side filtering for now)
   const filteredUsers = React.useMemo(() => {
     const users = (usersResponse as any)?.data?.items || []
-    
+
     if (!searchTerm) {
       return users
     }
@@ -193,27 +193,27 @@ export function UserManagement() {
                     </TableCell>
                     <TableCell className="min-w-[120px]">
                       <div className="flex items-center space-x-1 sm:space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-primary hover:text-primary/80 p-1 sm:p-2"
                           onClick={() => handleViewUser(user)}
                           title="View user details"
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-secondary hover:text-secondary/80 p-1 sm:p-2"
                           onClick={() => handleEditUser(user)}
                           title="Edit user"
                         >
                           <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-destructive hover:text-destructive/80 p-1 sm:p-2"
                           onClick={() => handleDeleteUser(user)}
                           title="Delete user"
@@ -227,7 +227,7 @@ export function UserManagement() {
               </TableBody>
             </Table>
           </div>
-          
+
           {/* Pagination Controls */}
           {pagination.last_page && pagination.last_page > 1 && (
             <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mt-4">

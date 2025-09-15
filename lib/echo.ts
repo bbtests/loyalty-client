@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-export async function initializeEcho(): Promise<any> {
+export async function initializeEcho(accessToken?: string): Promise<any> {
   if (typeof window === "undefined" || isInitialized) {
     return echo;
   }
@@ -27,22 +27,19 @@ export async function initializeEcho(): Promise<any> {
 
     // Create Echo instance
     echo = new Echo({
-      broadcaster: "pusher",
+      broadcaster: "reverb",
       key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || "bumpa-app-key",
       wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || "reverb",
-      wsPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT || "8000"),
-      wssPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT || "8000"),
+      wsPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT || "8080"),
+      wssPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT || "8080"),
       forceTLS: false,
       enabledTransports: ["ws"],
-      authEndpoint: process.env.NEXT_PUBLIC_REVERB_AUTH_ENDPOINT,
+      authEndpoint: process.env.NEXT_PUBLIC_REVERB_AUTH_ENDPOINT || "/api/v1/broadcasting/auth",
       auth: {
         headers: {
-          Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("token") || "" : ""}`,
+          Authorization: accessToken ? `Bearer ${accessToken}` : "",
         },
       },
-      cluster: "mt1",
-      disableStats: true,
-      encrypted: false,
     });
 
     // Set Echo on window for global access
@@ -51,6 +48,7 @@ export async function initializeEcho(): Promise<any> {
 
     return echo;
   } catch (error) {
+    console.error("Echo initialization error:", error);
     return null;
   }
 }

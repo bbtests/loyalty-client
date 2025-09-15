@@ -20,7 +20,7 @@ export function CashbackRequestModal({ isOpen, onClose, transaction }: CashbackR
   const [amount, setAmount] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-  
+
   const [requestCashback, { isLoading }] = useRequestCashbackMutation()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +29,7 @@ export function CashbackRequestModal({ isOpen, onClose, transaction }: CashbackR
     setSuccess(false)
 
     const cashbackAmount = parseFloat(amount)
-    
+
     if (!cashbackAmount || cashbackAmount <= 0) {
       setError("Please enter a valid cashback amount greater than ₦0")
       return

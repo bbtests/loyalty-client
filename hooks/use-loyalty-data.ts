@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
-    useGetUserLoyaltyDataQuery,
-    useInitializePaymentMutation,
-    useVerifyPaymentMutation,
-    useProcessPurchaseAfterPaymentMutation,
+  useGetUserLoyaltyDataQuery,
 } from "@/store/loyalty";
+import { useSimulateAchievementMutation } from "@/store/achievements";
+import type { Achievement } from "@/types/api";
 
 export function useLoyaltyData() {
   const { data: session } = useSession();
   const [error, setError] = useState<string | null>(null);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   // Use store query to fetch loyalty data
   const {
@@ -23,11 +23,8 @@ export function useLoyaltyData() {
     skip: !session?.user?.id,
   });
 
-  // Use store mutations for payment processing
-  const [initializePayment] = useInitializePaymentMutation();
-  const [verifyPayment] = useVerifyPaymentMutation();
-  const [processPurchaseAfterPayment] =
-    useProcessPurchaseAfterPaymentMutation();
+  // Use store mutation for achievement simulation
+  const [simulateAchievementMutation] = useSimulateAchievementMutation();
 
   // Set error from query if it exists
   useEffect(() => {
@@ -50,31 +47,36 @@ export function useLoyaltyData() {
       return;
     }
 
+    // Show the achievement selection modal
+    setShowAchievementModal(true);
+  };
+
+  const handleAchievementSelection = async (achievement: Achievement) => {
     try {
-      // Just refresh the data without triggering real achievement processing
-      // This simulates the UI update without calling the backend
-      console.log("🎯 Simulating achievement UI update (mock mode)");
-      
-      // Refresh loyalty data to get current state
+
+      // Use the store mutation to simulate the specific achievement unlock
+      const result = await simulateAchievementMutation({
+        achievement_id: achievement.id
+      }).unwrap();
+
       refetch();
-      
-      // Show a mock success message
-      console.log("✅ Mock achievement simulation completed");
+
     } catch (err: any) {
       console.error("Simulate Achievement Error:", err);
       setError(err.message || "Failed to simulate achievement");
     }
   };
 
-  const refreshData = () => {
-    refetch();
-  };
+  const refreshData = () => { refetch(); };
 
   return {
     loyaltyData,
     loading,
     error,
     simulateAchievement,
+    handleAchievementSelection,
     refreshData,
+    showAchievementModal,
+    setShowAchievementModal,
   };
 }

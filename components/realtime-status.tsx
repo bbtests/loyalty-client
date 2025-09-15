@@ -7,9 +7,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 export function RealtimeStatus() {
   const { 
-    isWebSocketConnected, 
-    isWebSocketConnecting, 
-    isWebSocketOffline, 
+    isConnected: isWebSocketConnected, 
+    isConnecting: isWebSocketConnecting, 
+    isOffline: isWebSocketOffline, 
     reconnectAttempts,
     refreshData 
   } = useRealtimeUpdates()

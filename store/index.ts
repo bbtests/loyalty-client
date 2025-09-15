@@ -1,6 +1,6 @@
 import { AnyAction, configureStore } from "@reduxjs/toolkit";
 import { users } from "./users";
-import { achievements } from "./achievements";
+import { achievements, achievementApi } from "./achievements";
 import { badges } from "./badges";
 import { transactions } from "./transactions";
 import { loyaltyPoints } from "./loyalty-points";
@@ -48,6 +48,7 @@ export const createAutoResetMiddleware =
 export const storeApis = {
   users,
   achievements,
+  achievementApi,
   badges,
   transactions,
   loyaltyPoints,
@@ -59,6 +60,7 @@ export const store = configureStore({
   reducer: {
     [users.reducerPath]: users.reducer,
     [achievements.reducerPath]: achievements.reducer,
+    ...(achievementApi && { [achievementApi.reducerPath]: achievementApi.reducer }),
     [badges.reducerPath]: badges.reducer,
     [transactions.reducerPath]: transactions.reducer,
     [loyaltyPoints.reducerPath]: loyaltyPoints.reducer,
@@ -70,6 +72,7 @@ export const store = configureStore({
       createAutoResetMiddleware(storeApis),
       users.middleware,
       achievements.middleware,
+      ...(achievementApi ? [achievementApi.middleware] : []),
       badges.middleware,
       transactions.middleware,
       loyaltyPoints.middleware,

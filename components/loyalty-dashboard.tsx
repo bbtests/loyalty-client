@@ -16,6 +16,7 @@ import { BadgeShowcase } from "@/components/badge-showcase";
 import { TransactionHistory } from "@/components/transaction-history";
 import { LoyaltyPointsHistory } from "@/components/loyalty-points-history";
 import { AchievementNotification } from "@/components/achievement-notification";
+import { AchievementSelectionModal } from "@/components/achievement-selection-modal";
 import { PaymentModal } from "@/components/payment/payment-modal";
 import { CashbackRequest } from "@/components/payment/cashback-request";
 import { useLoyaltyData } from "@/hooks/use-loyalty-data";
@@ -26,8 +27,6 @@ export function LoyaltyDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [showNotification, setShowNotification] = useState(false)
-  const [notificationData, setNotificationData] = useState<any>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentProcessed, setPaymentProcessed] = useState(false)
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
@@ -42,12 +41,20 @@ export function LoyaltyDashboard() {
     loyaltyData, 
     loyaltyLoading,
     loyaltyError,
-    isWebSocketOffline, 
-    refreshData: refreshRealtimeData 
+    isOffline: isWebSocketOffline, 
+    refreshData: refreshRealtimeData,
+    showAchievementNotification,
+    achievementNotificationData,
+    setShowAchievementNotification
   } = useRealtimeUpdates()
 
   // Get additional functions from useLoyaltyData for payment simulation
-  const { simulateAchievement } = useLoyaltyData()
+  const { 
+    simulateAchievement, 
+    handleAchievementSelection, 
+    showAchievementModal, 
+    setShowAchievementModal 
+  } = useLoyaltyData()
 
   // Handle tab URL synchronization
   useEffect(() => {
@@ -96,19 +103,8 @@ export function LoyaltyDashboard() {
   }
 
   const handleSimulateAchievement = async () => {
-    const newAchievement = {
-      id: Date.now(),
-      name: "Big Spender",
-      description: "Spent over ₦50,000 in a single transaction",
-      badge_icon: "diamond",
-      unlocked_at: new Date().toISOString(),
-    }
-
-    setNotificationData(newAchievement)
-    setShowNotification(true)
+    // Just call simulateAchievement - let WebSocket handle the notification
     await simulateAchievement()
-
-    setTimeout(() => setShowNotification(false), 4000)
   }
 
   const handlePaymentSuccess = async (transaction: any) => {
@@ -439,9 +435,12 @@ export function LoyaltyDashboard() {
         </div>
       )}
 
-      {/* Achievement Notification */}
-      {showNotification && notificationData && (
-        <AchievementNotification achievement={notificationData} onClose={() => setShowNotification(false)} />
+      {/* Achievement Notification - Triggered by WebSocket */}
+      {showAchievementNotification && achievementNotificationData && (
+        <AchievementNotification 
+          achievement={achievementNotificationData} 
+          onClose={() => setShowAchievementNotification(false)} 
+        />
       )}
 
       {/* Payment Modal - Only show for authenticated users */}
@@ -450,6 +449,16 @@ export function LoyaltyDashboard() {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* Achievement Selection Modal */}
+      {isAuthenticated && (
+        <AchievementSelectionModal
+          isOpen={showAchievementModal}
+          onClose={() => setShowAchievementModal(false)}
+          onSelectAchievement={handleAchievementSelection}
+          unlockedAchievements={loyaltyData?.achievements || []}
         />
       )}
     </div>
