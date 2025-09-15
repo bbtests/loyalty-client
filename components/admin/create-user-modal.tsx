@@ -90,11 +90,6 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       onClose()
       onSuccess?.()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to create user",
-        variant: "destructive",
-      })
     }
   }
 
@@ -164,12 +159,12 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                       value={field.value}
                       disabled={isLoading || rolesLoading}
                     >
-                      <SelectTrigger className={errors.role_id && touched.role_id ? "border-destructive" : ""}>
+                      <SelectTrigger className={`w-full ${errors.role_id && touched.role_id ? "border-destructive" : ""}`}>
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableRoles.map((role: any) => (
-                          <SelectItem key={role.id} value={role.id}>
+                          <SelectItem key={role.id} value={role.id.toString()}>
                             {role.name}
                           </SelectItem>
                         ))}

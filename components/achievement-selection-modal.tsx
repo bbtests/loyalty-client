@@ -78,7 +78,7 @@ export function AchievementSelectionModal({
             Select Achievement to Trigger
           </DialogTitle>
           <DialogDescription>
-            Choose an available achievement to simulate unlocking. Only achievements you haven't unlocked yet are shown.
+            Choose an available achievement to simulate unlocking. Only achievements you haven&apos;t unlocked yet are shown.
           </DialogDescription>
         </DialogHeader>
 

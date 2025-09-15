@@ -2,21 +2,21 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useUpdateUserMutation } from "@/store/users";
@@ -59,7 +59,7 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
   const [updateUser, { isLoading }] = useUpdateUserMutation()
   const { toast } = useToast()
   const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery()
-  
+
   // Filter out super admin role
   const availableRoles = (rolesData as any)?.data?.items?.filter((role: any) => role.name !== 'super admin') || []
 
@@ -77,7 +77,7 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
       name: user.name || "",
       email: user.email || "",
       password: "",
-      role_id: user.roles?.[0]?.id || "",
+      role_id: user.roles?.[0]?.id?.toString() || "",
     }
   }
 
@@ -108,11 +108,6 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
       onClose()
       onSuccess?.()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to update user",
-        variant: "destructive",
-      })
     }
   }
 
@@ -185,12 +180,12 @@ export function EditUserModal({ user, isOpen, onClose, onSuccess }: EditUserModa
                       value={field.value}
                       disabled={isLoading || rolesLoading}
                     >
-                      <SelectTrigger className={errors.role_id && touched.role_id ? "border-destructive" : ""}>
+                      <SelectTrigger className={`w-full ${errors.role_id && touched.role_id ? "border-destructive" : ""}`}>
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableRoles.map((role: any) => (
-                          <SelectItem key={role.id} value={role.id}>
+                          <SelectItem key={role.id} value={role.id.toString()}>
                             {role.name}
                           </SelectItem>
                         ))}

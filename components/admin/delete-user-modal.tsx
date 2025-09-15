@@ -40,11 +40,6 @@ export function DeleteUserModal({ user, isOpen, onClose, onSuccess }: DeleteUser
       onClose()
       onSuccess?.()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to delete user",
-        variant: "destructive",
-      })
     }
   }
 
