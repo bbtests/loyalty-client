@@ -33,15 +33,21 @@ export function LoyaltyDashboard() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   
-  // Enable real-time updates for achievements and badges
-  const { isWebSocketOffline, refreshData: refreshRealtimeData } = useRealtimeUpdates()
-
   // Check if user is authenticated
   const isAuthenticated = status === "authenticated" && session?.user
   const isLoading = status === "loading"
 
-  // Only load loyalty data for authenticated users
-  const { loyaltyData, loading: loyaltyLoading, error: loyaltyError, simulateAchievement, refreshData } = useLoyaltyData()
+  // Use real-time updates for loyalty data (includes WebSocket connection)
+  const { 
+    loyaltyData, 
+    loyaltyLoading,
+    loyaltyError,
+    isWebSocketOffline, 
+    refreshData: refreshRealtimeData 
+  } = useRealtimeUpdates()
+
+  // Get additional functions from useLoyaltyData for payment simulation
+  const { simulateAchievement } = useLoyaltyData()
 
   // Handle tab URL synchronization
   useEffect(() => {
@@ -107,12 +113,11 @@ export function LoyaltyDashboard() {
 
   const handlePaymentSuccess = async (transaction: any) => {
     // Refresh loyalty data to get updated points and achievements
-    await refreshData()
+    await refreshRealtimeData()
     
-    // Simulate achievement unlock for large purchases
-    if (transaction.amount >= 500) {
-      handleSimulateAchievement()
-    }
+    // Note: Achievement notifications will come through WebSocket events
+    // when the backend processes the payment and unlocks achievements
+    console.log("💳 Payment processed successfully", { amount: transaction.amount })
   }
 
   if (isLoading || (isAuthenticated && loyaltyLoading)) {
@@ -162,12 +167,12 @@ export function LoyaltyDashboard() {
           <AlertDescription className="flex items-center justify-between">
             <div className="flex items-center">
               <Trophy className="w-4 h-4 mr-2" />
-              {loyaltyError}
+              {typeof loyaltyError === 'string' ? loyaltyError : (loyaltyError as any)?.message || 'An error occurred'}
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={refreshData}
+              onClick={refreshRealtimeData}
               className="ml-4"
             >
               Retry
@@ -265,6 +270,19 @@ export function LoyaltyDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          {/* Manual Refresh Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshRealtimeData}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh Data
+            </Button>
+          </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Quick Stats */}
             <Card className="bg-card border-border">

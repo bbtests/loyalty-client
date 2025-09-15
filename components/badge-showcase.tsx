@@ -176,7 +176,7 @@ export function BadgeShowcase({ badges, currentBadge }: BadgeShowcaseProps) {
                   )}
 
                   {isCurrent && (
-                    <Badge variant="default" className="bg-primary text-primary-foreground">
+                    <Badge variant="default" className="mx-1 bg-primary text-primary-foreground">
                       Current Badge
                     </Badge>
                   )}
